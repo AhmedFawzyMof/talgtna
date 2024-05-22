@@ -32,7 +32,6 @@ app.use("/api/order", orderRoutes);
 app.use("/api/user", userRoutes);
 
 app.get("*", (req, res, next) => {
-  console.log(req.headers);
   if (!req.path.startsWith("/api")) {
     res.sendFile(
       path.resolve(__dirname, "..", "public/frontend", "index.html")
