@@ -46,7 +46,7 @@ module.exports = class OrderProducts {
   getOrderProducts() {
     return new Promise((resolve, reject) => {
       db.all(
-        "SELECT OrderProducts.quantity, OrderProducts.order, Products.id, Products.name, Products.image, Products.price FROM OrderProducts INNER JOIN Products ON OrderProducts.product = Products.id WHERE OrderProducts.order = ?",
+        "SELECT OrderProducts.quantity, OrderProducts.`order`, Products.id, Products.name, Products.image, Products.price FROM OrderProducts INNER JOIN Products ON OrderProducts.product = Products.id WHERE OrderProducts.`order` = ?",
         [this.orderproducts.order],
         (err, rows) => {
           if (err) {

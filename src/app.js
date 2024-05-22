@@ -31,14 +31,14 @@ app.use("/api/category", categoryRoutes);
 app.use("/api/order", orderRoutes);
 app.use("/api/user", userRoutes);
 
-// Redirect all non-API GET requests to React app
 app.get("*", (req, res, next) => {
+  console.log(req.headers);
   if (!req.path.startsWith("/api")) {
     res.sendFile(
       path.resolve(__dirname, "..", "public/frontend", "index.html")
     );
   } else {
-    next(); // Continue to the next middleware/route handler
+    next();
   }
 });
 
