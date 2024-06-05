@@ -4,11 +4,11 @@ const Products = require("../models/Products.model");
 const ProductByCategory = async (req, res) => {
   try {
     const name = req.params.name;
-    const offers = await new Offers({}).getAllOffers();
-    const categories = await new Categories({}).getCategories();
+    const offers = await Offers.getAll();
+    const categories = await Categories.getAll();
     const products = await new Products({
       category: name,
-    }).productsFromCategory();
+    }).byCategory();
 
     res.json({
       categories: categories,

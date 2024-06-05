@@ -6,7 +6,7 @@ module.exports = class Orders {
     this.order = order;
   }
 
-  addOrder() {
+  async add() {
     return new Promise((resolve, reject) => {
       this.order.id = uuidv4();
       this.order.date = new Date();
@@ -23,48 +23,44 @@ module.exports = class Orders {
           this.order.method,
         ],
         function (err) {
-          if (err) {
-            console.error(err);
-            reject(err);
-          } else {
-            resolve({ success: true, id: this.lastID });
-          }
+          if (err) reject(err);
+          resolve({ success: true, id: this.lastID });
         }
       );
     });
   }
 
-  getUserOrders() {
+  async getAll() {
     return new Promise((resolve, reject) => {
       db.all(
         "SELECT * FROM `Orders` WHERE user = ?",
         [this.order.user],
         (err, rows) => {
-          if (err) {
-            console.error(err);
-            reject(err);
-          } else {
-            resolve(rows);
-          }
+          if (err) reject(err);
+          resolve(rows);
         }
       );
     });
   }
 
-  updateOrder(delivered, value) {
+  async update(delivered, paid) {
     return new Promise((resolve, reject) => {
-      db.run(
-        `UPDATE Orders SET ${
-          delivered ? "delivered" : "paid"
-        } = ? WHERE id = ?`,
-        [value, this.order.id],
-        function (err) {
-          if (err) {
-            console.error(err);
-            reject(err);
-          } else {
-            resolve({ success: true, changes: this.changes });
-          }
+      const sql = `UPDATE Orders SET delivered = ?, paid = ? WHERE id = ?`;
+      db.run(sql, [delivered, paid, this.order.id], function (err) {
+        if (err) reject(err);
+        resolve({ success: true, changes: this.changes });
+      });
+    });
+  }
+
+  static async total({ orderId }) {
+    return new Promise((resolve, reject) => {
+      db.get(
+        "SELECT SUM(Products.price * OrderProducts.quantity) AS total_price FROM OrderProducts INNER JOIN Products ON OrderProducts.product = Products.id WHERE OrderProducts.order = ?",
+        [orderId],
+        (err, row) => {
+          if (err) reject(err);
+          resolve(row);
         }
       );
     });

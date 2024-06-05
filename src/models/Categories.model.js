@@ -5,48 +5,36 @@ module.exports = class Categories {
     this.category = category;
   }
 
-  getCategories() {
+  static async getAll() {
     return new Promise((resolve, reject) => {
       db.all("SELECT * FROM `Categories`", [], (err, rows) => {
-        if (err) {
-          console.error(err);
-          reject(err);
-        } else {
-          resolve(rows);
-        }
+        if (err) reject(err);
+        resolve(rows);
       });
     });
   }
 
-  addCategory() {
+  async add() {
     return new Promise((resolve, reject) => {
       db.run(
         "INSERT INTO `Categories` (`name`) VALUES (?)",
         [this.category.name],
         function (err) {
-          if (err) {
-            console.error(err);
-            reject(err);
-          } else {
-            resolve({ success: true, id: this.lastID });
-          }
+          if (err) reject(err);
+          resolve({ success: true, id: this.lastID });
         }
       );
     });
   }
 
-  editCategory() {
+  async edit() {
     return new Promise((resolve, reject) => {
       db.run(
         "UPDATE `Categories` SET `name_ar` = ? WHERE `id` = ?",
         [this.category.name, this.category.id],
         function (err) {
-          if (err) {
-            console.error(err);
-            reject(err);
-          } else {
-            resolve({ success: true, changes: this.changes });
-          }
+          if (err) reject(err);
+          resolve({ success: true, changes: this.changes });
         }
       );
     });

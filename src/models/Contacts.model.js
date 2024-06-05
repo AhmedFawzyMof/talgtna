@@ -5,20 +5,16 @@ module.exports = class Contact {
     this.contact = contact;
   }
 
-  getAllContacts() {
+  static async getAll() {
     return new Promise((resolve, reject) => {
       db.all("SELECT * FROM `Contact`", [], (err, rows) => {
-        if (err) {
-          console.error(err);
-          reject(err);
-        } else {
-          resolve(rows);
-        }
+        if (err) reject(err);
+        resolve(rows);
       });
     });
   }
 
-  addContact() {
+  async add() {
     return new Promise((resolve, reject) => {
       db.run(
         "INSERT INTO `Contact` (`name`, `email`, `phone`, `message`, `seen`) VALUES (?, ?, ?, ?, ?)",

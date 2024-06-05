@@ -7,82 +7,64 @@ const Userid = require("../utils/getUserId");
 const AddOrder = async (req, res) => {
   try {
     const order = req.body;
+    const authorizationHeader = req.headers.authorization;
+    const authorizationToken = authorizationHeader?.split(" ")?.[1];
+    let userId;
+    let token;
 
-    const UserToken = order.user;
-
-    const user = jwt.verify(UserToken, process.env.SECRET_KEY);
-
-    order.user = user.user;
-
-    if (!order.user) {
-      const userIsRegistered = await new Users({
+    if (!authorizationHeader) {
+      const userExists = await new Users({
         phone: order.phone,
-        spare_phone: order.spare_phone,
-      }).isRegistered();
+      }).find();
 
-      if (!userIsRegistered.success) {
-        const createUser = await new Users({
-          name: order.name,
-          phone: order.phone,
-          spare_phone: order.spare_phone,
-          street: order.street,
-          building: order.building,
-          floor: order.floor,
-        }).createUser();
+      if (!userExists.success) {
+        userId = await new Users(order).add().id;
+        token = jwt.sign({ user: userId }, process.env.SECRET_KEY);
+      }
 
-        if (!createUser.success) {
-          res.status(500).send("Internal Server Error");
-        }
-
-        order.user = createUser.id;
-      } else {
-        order.user = userIsRegistered.id;
+      if (userExists.success) {
+        userId = userExists.id;
+        token = jwt.sign({ user: userId }, process.env.SECRET_KEY);
       }
     }
 
-    const viryfyCoupons = await new Users({
-      id: order.user,
+    if (authorizationToken) {
+      userId = Userid.UserId(authorizationToken);
+    } else {
+      res.status(500).send("Internal Server Error");
+      return;
+    }
+
+    const verifyCoupons = await new Users({
+      id: userId,
       coupon: order.discount,
     }).verifyCoupons();
 
-    if (!viryfyCoupons.success) {
+    if (!verifyCoupons.success) {
       order.discount = { code: "", value: 0 };
-    } else {
-      order.discount = viryfyCoupons.coupon;
     }
 
-    const createOrder = await new Orders(order).addOrder();
+    order.discount = verifyCoupons.coupon;
 
-    if (!createOrder.success) {
-      res.status(500).send("Internal Server Error");
+    const createdOrder = await new Orders(order).add();
+
+    if (!createdOrder.success) {
+      res.status(500).send("Failed to create order");
     }
 
-    createOrder.id = order.id;
+    await Promise.all(
+      cart.map(async ({ id, quantity }) => {
+        await new OrderProducts({
+          order: createdOrder.id,
+          product: id,
+          quantity,
+        }).add();
+      })
+    );
 
-    order.cart.forEach(async (cartItem) => {
-      await new OrderProducts({
-        order: order.id,
-        product: cartItem.id,
-        quantity: cartItem.quantity,
-      }).addOrderProducts();
-    });
-
-    if (order.discount.code !== "") {
-      await new Users({
-        id: order.user,
-        coupon: order.discount,
-      }).removeUsedCoupon();
-    }
-
-    const token = jwt.sign({ user: order.user }, process.env.SECRET_KEY);
-
-    res.status(200).json({
-      success: true,
-      token: token,
-      order: order.id,
-    });
-  } catch (err) {
-    console.error(err);
+    res.status(200).json({ success: true, token, order: createdOrder.id });
+  } catch (error) {
+    console.error(error);
     res.status(500).send("Internal Server Error");
   }
 };
@@ -90,21 +72,26 @@ const AddOrder = async (req, res) => {
 const GetOrders = async (req, res) => {
   try {
     const token = req.headers.authorization.split(" ")[1];
+
+    if (!token) {
+      res.status(403).send("Forbidden Access");
+      return;
+    }
     const user = Userid.UserId(token);
 
-    const orders = await new Orders({ user: user }).getUserOrders();
+    const orders = await new Orders({ user: user }).getAll();
 
-    const orderPromises = orders.map(async (order) => {
-      const orderProduct = await new OrderProducts({
-        order: order.id,
-      }).getOrderProducts();
+    const ordersArry = await Promise.all(
+      orders.map(async (order) => {
+        const product = await new OrderProducts({
+          order: order.id,
+        }).getAll();
 
-      return { ...order, products: orderProduct };
-    });
-
-    const updatedOrders = await Promise.all(orderPromises);
-
-    res.json({ orders: updatedOrders });
+        return { ...order, products: product };
+      })
+    );
+    console.log(ordersArry);
+    res.json({ orders: ordersArry });
   } catch (err) {
     console.error(err);
     res.status(500).send("Internal Server Error");

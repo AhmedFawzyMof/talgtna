@@ -5,37 +5,29 @@ module.exports = class Offers {
     this.offer = offer;
   }
 
-  getAllOffers() {
+  static async getAll() {
     return new Promise((resolve, reject) => {
       db.all("SELECT * FROM `Offer`", [], (err, rows) => {
-        if (err) {
-          console.error(err);
-          reject(err);
-        } else {
-          resolve(rows);
-        }
+        if (err) reject(err);
+        resolve(rows);
       });
     });
   }
 
-  addOffer() {
+  async add() {
     return new Promise((resolve, reject) => {
       db.run(
         "INSERT INTO `Offer` (`product`, `image`, `company`) VALUES (?, ?, ?)",
         [this.offer.product, this.offer.image, this.offer.company],
         function (err) {
-          if (err) {
-            console.error(err);
-            reject(err);
-          } else {
-            resolve({ success: true, id: this.lastID });
-          }
+          if (err) reject(err);
+          resolve({ success: true, id: this.lastID });
         }
       );
     });
   }
 
-  editOffer() {
+  async edit() {
     return new Promise((resolve, reject) => {
       db.run(
         "UPDATE `Offer` SET `image` = ?, `company` = ?, `product` = ? WHERE `id` = ?",
@@ -46,12 +38,8 @@ module.exports = class Offers {
           this.offer.id,
         ],
         function (err) {
-          if (err) {
-            console.error(err);
-            reject(err);
-          } else {
-            resolve({ success: true, changes: this.changes });
-          }
+          if (err) reject(err);
+          resolve({ success: true, changes: this.changes });
         }
       );
     });

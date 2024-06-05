@@ -4,28 +4,38 @@ const UserId = require("../utils/getUserId");
 
 const AddToFav = async (req, res) => {
   try {
-    const { user, product } = req.body;
+    const product = req.body;
 
+    const user = req.headers.authorization.split(" ")[1];
+
+    if (!user) {
+      res.status(500).send("Internal Server Error");
+      return;
+    }
     const id = UserId.UserId(user);
 
-    const isRegister = await new Users({ id: id }).findUser();
+    const isRegister = await new Users().find({ id: id });
+
     if (!isRegister.success) {
-      res.json({ success: false });
+      res.status(403).send("Forbidden Access");
       return;
     }
 
-    const inFavorite = await new Products({ id: product }).favoriteProduct(id);
+    const inFavorite = await new Products({ id: product }).inFavorite({
+      userId: id,
+    });
 
     if (inFavorite) {
       res.json({ success: false });
       return;
     }
 
-    const addToFav = await new Products({ id: product }).addFavoriteProducts(
-      id
-    );
+    const addToFav = await new Products({ id: product }).addFavorite({
+      userId: id,
+    });
+
     if (!addToFav.success) {
-      res.json({ success: false });
+      res.status(500).send("Internal Server Error");
       return;
     }
 
@@ -39,10 +49,12 @@ const AddToFav = async (req, res) => {
 const GetFavorites = async (req, res) => {
   try {
     const token = req.headers.authorization.split(" ")[1];
-
+    if (!token) {
+      res.status(500).send("Internal Server Error");
+      return;
+    }
     const id = UserId.UserId(token);
-
-    const products = await new Products({}).favoriteProducts(id);
+    const products = await Products.byFavorite({ userId: id });
 
     res.json({ products: products });
   } catch (err) {
@@ -54,8 +66,13 @@ const GetFavorites = async (req, res) => {
 const GetCoupons = async (req, res) => {
   try {
     const token = req.headers.authorization.split(" ")[1];
+    if (!token) {
+      res.status(500).send("Internal Server Error");
+      return;
+    }
+
     const id = UserId.UserId(token);
-    const coupons = await new Users({ id: id }).userCoupons();
+    const coupons = await new Users({ id: id }).coupons();
     res.json({ coupons: coupons });
   } catch (err) {
     console.error(err);

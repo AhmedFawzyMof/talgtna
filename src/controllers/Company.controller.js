@@ -4,13 +4,14 @@ const Products = require("../models/Products.model");
 const CompanyByName = async (req, res) => {
   try {
     const name = req.params.name;
-    const company = await new Companies({ name: name }).companyByName();
+    const company = await new Companies({ name: name }).byName();
     const products = await new Products({
       company: company.name,
-    }).productsFromCompany();
+    }).byCompany();
 
     res.json({ company: company, products: products });
   } catch (error) {
+    console.error(error);
     res.status(500).send(error);
   }
 };
