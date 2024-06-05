@@ -8,23 +8,24 @@ module.exports = class Orders {
 
   async add() {
     return new Promise((resolve, reject) => {
-      this.order.id = uuidv4();
-      this.order.date = new Date();
+      const id = uuidv4();
+      const date = new Date();
       db.run(
         "INSERT INTO `Orders` (`id`, `user`, `delivered`, `paid`, `date`, `discount`, `city`, `method`) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
         [
-          this.order.id,
+          id,
           this.order.user,
           0,
           0,
-          this.order.date.toISOString(),
+          date.toISOString(),
           JSON.stringify(this.order.discount),
           this.order.city,
           this.order.method,
         ],
         function (err) {
+          console.log(err);
           if (err) reject(err);
-          resolve({ success: true, id: this.lastID });
+          resolve({ success: true, id: id });
         }
       );
     });

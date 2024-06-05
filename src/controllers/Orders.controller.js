@@ -13,12 +13,18 @@ const AddOrder = async (req, res) => {
     let token;
 
     if (!authorizationHeader) {
-      const userExists = await new Users({
-        phone: order.phone,
-      }).find();
+      const userExists = await new Users().find({ phone: order.phone });
 
       if (!userExists.success) {
-        userId = await new Users(order).add().id;
+        const newUser = {
+          name: order.name,
+          phone: order.phone,
+          spare_phone: order.spare_phone,
+          street: order.street,
+          building: order.building,
+          floor: order.floor,
+        };
+        userId = await new Users(newUser).add().id;
         token = jwt.sign({ user: userId }, process.env.SECRET_KEY);
       }
 
@@ -30,9 +36,6 @@ const AddOrder = async (req, res) => {
 
     if (authorizationToken) {
       userId = Userid.UserId(authorizationToken);
-    } else {
-      res.status(500).send("Internal Server Error");
-      return;
     }
 
     const verifyCoupons = await new Users({
@@ -40,20 +43,25 @@ const AddOrder = async (req, res) => {
       coupon: order.discount,
     }).verifyCoupons();
 
-    if (!verifyCoupons.success) {
-      order.discount = { code: "", value: 0 };
+    if (verifyCoupons.success) {
+      order["discount"] = verifyCoupons.coupons;
     }
 
-    order.discount = verifyCoupons.coupon;
+    const newOrder = {
+      user: userId,
+      city: order.city,
+      method: order.method,
+      discount: order.discount,
+    };
 
-    const createdOrder = await new Orders(order).add();
+    const createdOrder = await new Orders(newOrder).add();
 
     if (!createdOrder.success) {
       res.status(500).send("Failed to create order");
     }
 
     await Promise.all(
-      cart.map(async ({ id, quantity }) => {
+      order.cart.map(async ({ id, quantity }) => {
         await new OrderProducts({
           order: createdOrder.id,
           product: id,
@@ -90,7 +98,6 @@ const GetOrders = async (req, res) => {
         return { ...order, products: product };
       })
     );
-    console.log(ordersArry);
     res.json({ orders: ordersArry });
   } catch (err) {
     console.error(err);

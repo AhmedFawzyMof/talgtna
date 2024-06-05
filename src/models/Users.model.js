@@ -51,16 +51,16 @@ module.exports = class Users {
 
   async add() {
     return new Promise((resolve, reject) => {
-      this.user.id = uuidv4();
+      const id = uuidv4();
       this.user.coupons = [
         { code: "13102019", value: 10 },
         { code: "80402002", value: 15 },
         { code: "دعم فلسطين", value: 0 },
       ];
       db.run(
-        "INSERT INTO `Users` (`id`, `name`, `phone`, `coupons`, `spare_phone`, `street`, `building`, `floor`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO `Users` (`id`, `name`, `phone`, `coupons`, `spare_phone`, `street`, `building`, `floor`) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
         [
-          this.user.id,
+          id,
           this.user.name,
           this.user.phone,
           JSON.stringify(this.user.coupons),
@@ -71,7 +71,7 @@ module.exports = class Users {
         ],
         function (err) {
           if (err) reject(err);
-          resolve({ success: true, id: this.user.id });
+          resolve({ success: true, id: id });
         }
       );
     });
@@ -105,7 +105,7 @@ module.exports = class Users {
 
   async removeCoupon() {
     return new Promise(async (resolve, reject) => {
-      const userCoupons = await this.userCoupons();
+      const userCoupons = await this.coupons();
 
       const newCoupons = userCoupons.filter(
         (coupon) => coupon.code !== this.user.coupon.code
@@ -124,14 +124,14 @@ module.exports = class Users {
 
   async verifyCoupons() {
     return new Promise(async (resolve, reject) => {
-      const userCoupons = await this.userCoupons();
+      const userCoupons = await this.coupons();
 
       const isInCoupons = userCoupons.find(
         (coupon) => coupon.code === this.user.coupon.code
       );
 
       if (!isInCoupons) {
-        reject({ success: false, message: "coupon not found" });
+        resolve({ success: false, message: "coupon not found" });
       }
 
       resolve({ success: true, coupons: isInCoupons });
