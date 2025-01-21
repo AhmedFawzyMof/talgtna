@@ -3,11 +3,11 @@ const cookieParser = require("cookie-parser");
 const cors = require("cors");
 const path = require("path");
 const app = express();
-const port = process.env.PORT || 3001;
+const port = process.env.PORT || 3000;
 require("dotenv").config();
 const corsOptions = {
-  origin: "*", // Make sure this matches the request origin exactly
-  optionsSuccessStatus: 200, // some legacy browsers (IE11, various SmartTVs) choke on 204
+  origin: "*",
+  optionsSuccessStatus: 200,
 };
 
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
@@ -16,7 +16,7 @@ app.set("view engine", "ejs");
 app.use(cookieParser());
 app.use(express.static("public"));
 app.use(cors(corsOptions));
-//Routes
+
 const indexRoutes = require("./routes/Index.route");
 const companyRoutes = require("./routes/Companies.route");
 const productRoutes = require("./routes/Products.route");
@@ -24,17 +24,17 @@ const categoryRoutes = require("./routes/Categories.route");
 const orderRoutes = require("./routes/Orders.route");
 const userRoutes = require("./routes/Users.route");
 
-app.use("/api", indexRoutes);
-app.use("/api/company", companyRoutes);
-app.use("/api/products", productRoutes);
-app.use("/api/category", categoryRoutes);
-app.use("/api/order", orderRoutes);
-app.use("/api/user", userRoutes);
+app.use("/talgtna/api", indexRoutes);
+app.use("/talgtna/api/company", companyRoutes);
+app.use("/talgtna/api/products", productRoutes);
+app.use("/talgtna/api/category", categoryRoutes);
+app.use("/talgtna/api/order", orderRoutes);
+app.use("/talgtna/api/user", userRoutes);
 
 app.get("*", (req, res, next) => {
-  if (!req.path.startsWith("/api")) {
+  if (req.path.startsWith("/talgtna")) {
     res.sendFile(
-      path.resolve(__dirname, "..", "public/frontend", "index.html")
+      path.resolve(__dirname, "..", "public/talgtna/frontend", "index.html")
     );
   } else {
     next();
