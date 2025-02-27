@@ -5,7 +5,7 @@
 Follow these steps to download and install this full-stack project from GitHub.
 
 ### Prerequisites
-- Install [Node.js](https://nodejs.org/) (version 14+ recommended)
+- Install [Node.js](https://nodejs.org/) (version 18+ recommended)
 - Install [Git](https://git-scm.com/)
 
 ### Clone the Repository
