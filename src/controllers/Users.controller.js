@@ -4,7 +4,7 @@ const UserId = require("../utils/getUserId");
 
 const AddToFav = async (req, res) => {
   try {
-    const product = req.body;
+    const { product_id } = req.body;
 
     const user = req.headers.authorization.split(" ")[1];
 
@@ -14,14 +14,14 @@ const AddToFav = async (req, res) => {
     }
     const id = UserId.UserId(user);
 
-    const isRegister = await new Users().find({ id: id });
+    const isRegister = await new Users({ id: id }).byId();
 
-    if (!isRegister.success) {
+    if (!isRegister) {
       res.status(403).send("Forbidden Access");
       return;
     }
 
-    const inFavorite = await new Products({ id: product }).inFavorite({
+    const inFavorite = await new Products({ id: product_id }).inFavorite({
       userId: id,
     });
 
@@ -30,7 +30,7 @@ const AddToFav = async (req, res) => {
       return;
     }
 
-    const addToFav = await new Products({ id: product }).addFavorite({
+    const addToFav = await new Products({ id: product_id }).addFavorite({
       userId: id,
     });
 
@@ -49,11 +49,14 @@ const AddToFav = async (req, res) => {
 const GetFavorites = async (req, res) => {
   try {
     const token = req.headers.authorization.split(" ")[1];
+
     if (!token) {
       res.status(500).send("Internal Server Error");
       return;
     }
+
     const id = UserId.UserId(token);
+
     const products = await Products.byFavorite({ userId: id });
 
     res.json({ products: products });

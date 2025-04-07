@@ -69,7 +69,7 @@ module.exports = class Products {
   async add() {
     return new Promise((resolve, reject) => {
       db.run(
-        "INSERT INTO `Products`(`name`, `description`, `category`, `company`, `price`, `image`, `available`, `buyingprice`) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO `Products`(`name`, `description`, `category`, `company`, `price`, `image`, `available`) VALUES (?, ?, ?, ?, ?, ?, ?)",
         [
           this.product.name,
           this.product.description,
@@ -78,7 +78,6 @@ module.exports = class Products {
           this.product.price,
           this.product.image,
           this.product.available,
-          this.product.buyingprice,
         ],
         function (err) {
           if (err) reject(err);
@@ -147,6 +146,56 @@ module.exports = class Products {
           resolve(row);
         }
       );
+    });
+  }
+
+  static async adminProducts({ limit, search }) {
+    const totalProducts = await new Promise((resolve, reject) => {
+      let sql = "SELECT COUNT(*) as total FROM `Products`";
+      const inputs = [];
+
+      if (search !== undefined && search !== "") {
+        sql += " WHERE name LIKE ? AND deleted = 0";
+        inputs.push("%" + search + "%");
+      } else {
+        sql += "WHERE deleted = 0";
+      }
+
+      db.get(sql, inputs, (err, row) => {
+        if (err) reject(err);
+        resolve(row);
+      });
+    });
+    const OFFSET = limit - 50;
+    const products = await new Promise((resolve, reject) => {
+      let sql = "SELECT * FROM `Products` WHERE deleted = 0";
+      const inputs = [];
+
+      if (search !== undefined && search !== "") {
+        sql += " AND name LIKE ?";
+        inputs.push("%" + search + "%");
+      }
+
+      sql += " LIMIT ? OFFSET ?";
+
+      inputs.push(limit, OFFSET);
+      db.all(sql, inputs, (err, rows) => {
+        if (err) reject(err);
+        resolve(rows);
+      });
+    });
+    return { totalProducts: totalProducts.total, products };
+  }
+
+  static async delete(ids) {
+    return new Promise((resolve, reject) => {
+      const sql = `UPDATE Products SET deleted = 1 WHERE id IN (${ids
+        .map(() => "?")
+        .join(",")})`;
+      db.run(sql, ids, function (err) {
+        if (err) reject(err);
+        resolve();
+      });
     });
   }
 };

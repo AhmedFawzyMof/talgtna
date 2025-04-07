@@ -1,5 +1,9 @@
 const db = require("../config/database").db;
 const { v4: uuidv4 } = require("uuid");
+const {
+  getLastMonthRange,
+  getFirstDayOfCurrentMonth,
+} = require("../utils/date");
 
 module.exports = class Users {
   constructor(user) {
@@ -19,6 +23,19 @@ module.exports = class Users {
     });
   }
 
+  async byId() {
+    return new Promise((resolve, reject) => {
+      db.get(
+        "SELECT * FROM `Users` WHERE id = ?",
+        [this.user.id],
+        (err, row) => {
+          if (err) reject(err);
+          resolve(row);
+        }
+      );
+    });
+  }
+
   async cashback() {
     return new Promise((resolve, reject) => {
       db.get(
@@ -32,19 +49,12 @@ module.exports = class Users {
     });
   }
 
-  async find(options = {}) {
-    const searchBy = {
-      key: Object.keys(options)[0],
-      value: Object.values(options)[0],
-    };
-
+  async find() {
     return new Promise((resolve, reject) => {
-      const sql = `SELECT * FROM Users WHERE ${searchBy.key} = ?`;
-      db.get(sql, [searchBy.value], (err, row) => {
+      const sql = `SELECT * FROM Users WHERE phone = ? OR spare_phone = ?`;
+      db.get(sql, [this.user.phone, this.user.spare_phone], (err, row) => {
         if (err) reject(err);
-        resolve(
-          row ? { success: true, id: row.id } : { success: false, id: null }
-        );
+        resolve(row ? { id: row.id } : { id: null });
       });
     });
   }
@@ -52,26 +62,35 @@ module.exports = class Users {
   async add() {
     return new Promise((resolve, reject) => {
       const id = uuidv4();
-      this.user.coupons = [
-        { code: "13102019", value: 10 },
-        { code: "80402002", value: 15 },
-        { code: "دعم فلسطين", value: 0 },
-      ];
+
+      const coupons = [];
+
+      const created_at = new Intl.DateTimeFormat("en-EG", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      }).format(new Date());
+
       db.run(
-        "INSERT INTO `Users` (`id`, `name`, `phone`, `coupons`, `spare_phone`, `street`, `building`, `floor`) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO `Users` (`id`, `name`, `phone`, `coupons`, `spare_phone`, `street`, `building`, `floor`,`created_at`, `city`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         [
           id,
           this.user.name,
           this.user.phone,
-          JSON.stringify(this.user.coupons),
+          JSON.stringify(coupons),
           this.user.spare_phone,
           this.user.street,
           this.user.building,
           this.user.floor,
+          created_at,
+          this.user.city,
         ],
         function (err) {
           if (err) reject(err);
-          resolve({ success: true, id: id });
+          resolve({ id: id });
         }
       );
     });
@@ -136,5 +155,64 @@ module.exports = class Users {
 
       resolve({ success: true, coupons: isInCoupons });
     });
+  }
+
+  static async activeCustomers() {
+    const { firstDay, lastDay } = getLastMonthRange();
+    const currentFirstDay = getFirstDayOfCurrentMonth();
+
+    return new Promise((resolve, reject) => {
+      db.get(
+        "SELECT COUNT(*) AS total_user, (SELECT COuNT(*) FROM Users WHERE created_at <= ? AND created_at >= ?) AS total_users_lastmonth FROM Users WHERE created_at >= ?",
+        [lastDay, firstDay, currentFirstDay],
+        (err, rows) => {
+          if (err) reject(err);
+          resolve(rows);
+        }
+      );
+    });
+  }
+
+  static async adminUsers({ limit, search }) {
+    const totalUsers = await new Promise((resolve, reject) => {
+      let sql = "SELECT COUNT(*) as total FROM `Users`";
+      const inputs = [];
+
+      if (search !== undefined && search !== "") {
+        sql += " WHERE name LIKE ? OR phone LIKE ? OR spare_phone LIKE ?";
+        inputs.push("%" + search + "%");
+        inputs.push("%" + search + "%");
+        inputs.push("%" + search + "%");
+      }
+
+      db.get(sql, inputs, (err, row) => {
+        if (err) reject(err);
+        resolve(row);
+      });
+    });
+
+    const OFFSET = limit - 50;
+    const users = await new Promise((resolve, reject) => {
+      let sql = "SELECT * FROM `Users`";
+      const inputs = [];
+
+      if (search !== undefined && search !== "") {
+        sql += " WHERE name LIKE ? OR phone LIKE ? OR spare_phone LIKE ?";
+        inputs.push("%" + search + "%");
+        inputs.push("%" + search + "%");
+        inputs.push("%" + search + "%");
+      }
+
+      sql += " LIMIT ? OFFSET ?";
+
+      inputs.push(limit, OFFSET);
+
+      db.all(sql, inputs, (err, rows) => {
+        if (err) reject(err);
+        resolve(rows);
+      });
+    });
+
+    return { totalUsers: totalUsers.total, users };
   }
 };

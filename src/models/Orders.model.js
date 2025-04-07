@@ -1,5 +1,9 @@
 const db = require("../config/database").db;
 const { v4: uuidv4 } = require("uuid");
+const {
+  getLastMonthRange,
+  getFirstDayOfCurrentMonth,
+} = require("../utils/date");
 
 module.exports = class Orders {
   constructor(order) {
@@ -7,25 +11,27 @@ module.exports = class Orders {
   }
 
   async add() {
+    const { order } = this.order;
+
     return new Promise((resolve, reject) => {
       const id = uuidv4();
-      const date = new Date();
+
       db.run(
-        "INSERT INTO `Orders` (`id`, `user`, `delivered`, `paid`, `date`, `discount`, `city`, `method`) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO `Orders` (`id`, `user`, `delivered`, `paid`, `discount`, `method`, `total`, `created_at`) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
         [
           id,
-          this.order.user,
-          0,
-          0,
-          date.toISOString(),
-          JSON.stringify(this.order.discount),
-          this.order.city,
-          this.order.method,
+          order.user,
+          order.delivered,
+          order.paid,
+          JSON.stringify(order.discount),
+          order.method,
+          order.total,
+          order.created_at,
         ],
         function (err) {
           console.log(err);
           if (err) reject(err);
-          resolve({ success: true, id: id });
+          resolve({ id: id });
         }
       );
     });
@@ -34,7 +40,7 @@ module.exports = class Orders {
   async getAll() {
     return new Promise((resolve, reject) => {
       db.all(
-        "SELECT * FROM `Orders` WHERE user = ?",
+        "SELECT id, created_at, method, discount, delivered, paid, total FROM `Orders` WHERE user = ?",
         [this.order.user],
         (err, rows) => {
           if (err) reject(err);
@@ -62,6 +68,106 @@ module.exports = class Orders {
         (err, row) => {
           if (err) reject(err);
           resolve(row);
+        }
+      );
+    });
+  }
+
+  static async numberOfOrders() {
+    const { firstDay, lastDay } = getLastMonthRange();
+    const currentFirstDay = getFirstDayOfCurrentMonth();
+
+    const numberOfOrders = await new Promise((resolve, reject) => {
+      db.get(
+        "SELECT COUNT(*) AS total_orders, (SELECT COUNT(*) FROM Orders WHERE created_at <= ? AND created_at >= ?) AS total_orders_lastmonth FROM Orders WHERE created_at >= ?",
+        [lastDay, firstDay, currentFirstDay],
+        (err, row) => {
+          if (err) reject(err);
+          resolve(row);
+        }
+      );
+    });
+
+    const totalRevenue = await new Promise((resolve, reject) => {
+      db.get(
+        "SELECT SUM(total) AS total_revenue, (SELECT SUM(total) FROM Orders WHERE created_at <= ? AND created_at >= ?) AS total_revenue_lastmonth FROM Orders WHERE created_at >= ?",
+        [lastDay, firstDay, currentFirstDay],
+        (err, row) => {
+          if (err) reject(err);
+          resolve(row);
+        }
+      );
+    });
+
+    return {
+      numberOfOrders,
+      totalRevenue,
+    };
+  }
+
+  static async latestOrders() {
+    return new Promise((resolve, reject) => {
+      db.all(
+        "SELECT Orders.id, Users.name as customer, Orders.created_at as date, Orders.total as amount, Orders.delivered as status FROM `Orders` INNER JOIN Users ON Orders.user = Users.id ORDER BY Orders.created_at DESC LIMIT 5",
+        (err, rows) => {
+          if (err) reject(err);
+          resolve(rows);
+        }
+      );
+    });
+  }
+
+  static async adminOrders({ limit, search }) {
+    const totalOrders = await new Promise((resolve, reject) => {
+      let sql = "SELECT COUNT(*) as total FROM `Orders`";
+      const inputs = [];
+
+      if (search !== undefined && search !== "") {
+        sql += " WHERE id LIKE ?";
+        inputs.push("%" + search + "%");
+      }
+
+      db.get(sql, inputs, (err, row) => {
+        if (err) reject(err);
+        resolve(row);
+      });
+    });
+    const OFFSET = limit - 50;
+    const orders = await new Promise((resolve, reject) => {
+      let sql =
+        "SELECT Orders.id, Users.name as user, Users.phone, Users.spare_phone, Users.building, Users.floor, Users.street, Users.city, Orders.created_at, Orders.total, Orders.delivered, Orders.paid, Orders.discount, Orders.method FROM `Orders` INNER JOIN Users ON Orders.user = Users.id";
+      const inputs = [];
+
+      if (search !== undefined && search !== "") {
+        sql += " WHERE Orders.id LIKE ?";
+        inputs.push("%" + search + "%");
+      }
+
+      sql += " LIMIT ? OFFSET ?";
+
+      inputs.push(limit, OFFSET);
+
+      db.all(sql, inputs, (err, rows) => {
+        if (err) reject(err);
+        resolve(rows);
+      });
+    });
+
+    return {
+      totalOrders: totalOrders.total,
+      orders,
+    };
+  }
+
+  async edit() {
+    return new Promise((resolve, reject) => {
+      const sql = `UPDATE Orders SET delivered = ?, paid = ? WHERE id = ?`;
+      db.run(
+        sql,
+        [this.order.delivered, this.order.paid, this.order.id],
+        function (err) {
+          if (err) reject(err);
+          resolve({ success: true, changes: this.changes });
         }
       );
     });

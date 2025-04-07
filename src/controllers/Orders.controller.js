@@ -3,78 +3,69 @@ const Orders = require("../models/Orders.model");
 const OrderProducts = require("../models/OrderProducts.model");
 const jwt = require("jsonwebtoken");
 const Userid = require("../utils/getUserId");
+const { getCurrentDay } = require("../utils/date");
 
 const AddOrder = async (req, res) => {
-  try {
-    const order = req.body;
-    const authorizationHeader = req.headers.authorization;
-    const authorizationToken = authorizationHeader?.split(" ")?.[1];
-    let userId;
-    let token;
+  const body = req.body;
 
-    if (!authorizationHeader) {
-      const userExists = await new Users().find({ phone: order.phone });
+  const userData = {
+    phone: body.phone,
+    spare_phone: body.spare_phone,
+    street: body.street,
+    building: body.building,
+    floor: body.floor,
+    city: body.city,
+    name: body.name,
+  };
 
-      if (!userExists.success) {
-        const newUser = {
-          name: order.name,
-          phone: order.phone,
-          spare_phone: order.spare_phone,
-          street: order.street,
-          building: order.building,
-          floor: order.floor,
-        };
-        userId = await new Users(newUser).add().id;
-        token = jwt.sign({ user: userId }, process.env.SECRET_KEY);
-      }
+  let token = "";
 
-      if (userExists.success) {
-        userId = userExists.id;
-        token = jwt.sign({ user: userId }, process.env.SECRET_KEY);
-      }
-    }
-
-    if (authorizationToken) {
-      userId = Userid.UserId(authorizationToken);
-    }
-
-    const verifyCoupons = await new Users({
-      id: userId,
-      coupon: order.discount,
-    }).verifyCoupons();
-
-    if (verifyCoupons.success) {
-      order["discount"] = verifyCoupons.coupons;
-    }
-
-    const newOrder = {
-      user: userId,
-      city: order.city,
-      method: order.method,
-      discount: order.discount,
-    };
-
-    const createdOrder = await new Orders(newOrder).add();
-
-    if (!createdOrder.success) {
-      res.status(500).send("Failed to create order");
-    }
-
-    await Promise.all(
-      order.cart.map(async ({ id, quantity }) => {
-        await new OrderProducts({
-          order: createdOrder.id,
-          product: id,
-          quantity,
-        }).add();
-      })
-    );
-
-    res.status(200).json({ success: true, token, order: createdOrder.id });
-  } catch (error) {
-    console.error(error);
-    res.status(500).send("Internal Server Error");
+  if (req.headers.authorization) {
+    token = req.headers.authorization.split(" ")[1];
   }
+
+  if (!token) {
+    const findUser = await new Users({
+      phone: body.phone,
+      spare_phone: body.spare_phone,
+    }).find();
+
+    if (!findUser.id) {
+      const user = await new Users(userData).add();
+      token = jwt.sign({ id: user.id }, process.env.SECRET_KEY);
+    } else {
+      token = jwt.sign({ id: findUser.id }, process.env.SECRET_KEY);
+    }
+  }
+
+  const orderTotal = async () => {
+    return await new OrderProducts({ products: body.cart }).total();
+  };
+
+  const created_at = getCurrentDay();
+
+  const { total, cart } = await orderTotal();
+
+  const order = await new Orders({
+    order: {
+      user: Userid.UserId(token),
+      method: body.method,
+      discount: body.discount,
+      delivered: 0,
+      paid: 0,
+      created_at: created_at,
+      total: total,
+    },
+  }).add();
+
+  await new OrderProducts({
+    order: order.id,
+    orderproducts: {
+      products: cart,
+    },
+  }).add();
+
+  res.json({ token: token, order: order.id });
 };
 
 const GetOrders = async (req, res) => {
@@ -98,6 +89,7 @@ const GetOrders = async (req, res) => {
         return { ...order, products: product };
       })
     );
+
     res.json({ orders: ordersArry });
   } catch (err) {
     console.error(err);

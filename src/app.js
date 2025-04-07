@@ -23,6 +23,7 @@ const productRoutes = require("./routes/Products.route");
 const categoryRoutes = require("./routes/Categories.route");
 const orderRoutes = require("./routes/Orders.route");
 const userRoutes = require("./routes/Users.route");
+const adminRoutes = require("./routes/Admins.route");
 
 app.use("/talgtna/api", indexRoutes);
 app.use("/talgtna/api/company", companyRoutes);
@@ -30,15 +31,22 @@ app.use("/talgtna/api/products", productRoutes);
 app.use("/talgtna/api/category", categoryRoutes);
 app.use("/talgtna/api/order", orderRoutes);
 app.use("/talgtna/api/user", userRoutes);
+app.use("/talgtna/api/admin", adminRoutes);
 
 app.get("*", (req, res, next) => {
-  if (req.path.startsWith("/talgtna")) {
+  if (req.path.includes("api")) {
+    return next();
+  }
+
+  if (req.path.startsWith("/admin")) {
+    return res.sendFile(path.resolve(__dirname, "..", "public", "admin.html"));
+  } else {
     res.sendFile(
       path.resolve(__dirname, "..", "public/talgtna/frontend", "index.html")
     );
-  } else {
-    next();
   }
 });
 
-app.listen(port, () => console.log(`Example app listening on port ${port}!`));
+app.listen(port, () =>
+  console.log(`Server running on http://localhost:${port}`)
+);

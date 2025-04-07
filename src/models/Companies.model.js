@@ -1,6 +1,6 @@
 const db = require("../config/database").db;
 
-class Companies {
+module.exports = class Companies {
   constructor({ name, image }) {
     this.name = name;
     this.image = image;
@@ -53,6 +53,4 @@ class Companies {
       );
     });
   }
-}
-
-module.exports = Companies;
+};
