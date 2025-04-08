@@ -156,6 +156,43 @@ const AdminAddProducts = async (req, res) => {
   }
 };
 
+const AdminCompanies = async (req, res) => {
+  try {
+    const companies = await CompanyModel.getAll();
+    res.json({ companies: companies });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Internal Server Error");
+  }
+};
+
+const AdminAddCompanies = async (req, res) => {
+  try {
+    const company = req.body;
+
+    const image = `/img/compony/${company.name}`;
+
+    Object.assign(company, { image });
+
+    await new CompanyModel(company).add();
+    res.status(200).json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Internal Server Error");
+  }
+};
+
+const AdminDeleteCompanies = async (req, res) => {
+  try {
+    const ids = req.body.ids;
+    await CompanyModel.delete(ids);
+    res.status(200).json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Internal Server Error");
+  }
+};
+
 module.exports = {
   AdminLogin,
   AdminDashboard,
@@ -166,4 +203,7 @@ module.exports = {
   AdminEditOrders,
   AdminUsers,
   AdminAddProducts,
+  AdminCompanies,
+  AdminAddCompanies,
+  AdminDeleteCompanies,
 };

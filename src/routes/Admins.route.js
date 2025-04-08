@@ -7,11 +7,17 @@ const path = require("path");
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, "public/talgtna/img/product");
+    let dir = "./public/talgtna/img/product";
+
+    if (req.url.includes("companies")) {
+      dir = "./public/talgtna/img/compony";
+    }
+
+    cb(null, dir);
   },
   filename: function (req, file, cb) {
     const ext = path.extname(file.originalname); // Get .png, .jpg, etc.
-    cb(null, file.originalname + ext);
+    cb(null, req.body.name + ext);
   },
 });
 
@@ -34,7 +40,14 @@ router.get("/orders", ValidateToken, controller.AdminOrders);
 router.put("/orders/:id", ValidateToken, controller.AdminEditOrders);
 
 router.get("/users", ValidateToken, controller.AdminUsers);
-router.delete("/users/:id", ValidateToken, controller.AdminEditProduct);
-router.put("/users", ValidateToken, controller.AdminDeleteProducts);
+
+router.get("/companies", ValidateToken, controller.AdminCompanies);
+router.post(
+  "/companies",
+  ValidateToken,
+  upload.single("image"),
+  controller.AdminAddCompanies
+);
+router.delete("/companies", ValidateToken, controller.AdminDeleteCompanies);
 
 module.exports = router;

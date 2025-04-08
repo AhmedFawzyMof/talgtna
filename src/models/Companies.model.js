@@ -41,6 +41,19 @@ module.exports = class Companies {
     });
   }
 
+  async delete({ ids }) {
+    return new Promise((resolve, reject) => {
+      const sql = `DELETE FROM Companies WHERE id IN (${ids
+        .map(() => "?")
+        .join(",")})`;
+
+      db.run(sql, ids, (err) => {
+        if (err) reject(err);
+        else resolve({ success: true, changes: this.changes });
+      });
+    });
+  }
+
   async byName() {
     return new Promise((resolve, reject) => {
       db.get(
