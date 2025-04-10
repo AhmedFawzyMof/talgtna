@@ -5,9 +5,9 @@ const Contacts = require("../models/Contacts.model");
 
 const Home = async (req, res) => {
   try {
-    const companies = await Companies.getAll();
+    const companies = await Companies.getAll({ search: "" });
     const offers = await Offers.getAll();
-    const categories = await Categories.getAll();
+    const categories = await Categories.getAll({ search: "" });
 
     res.json({
       offers: offers,
@@ -23,7 +23,6 @@ const Home = async (req, res) => {
 const AddContact = async (req, res) => {
   try {
     const contact = req.body;
-    contact.seen = 0;
     const result = await new Contacts(contact).add();
 
     if (result.success) {

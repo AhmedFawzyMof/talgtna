@@ -17,8 +17,8 @@ module.exports = class Offers {
   async add() {
     return new Promise((resolve, reject) => {
       db.run(
-        "INSERT INTO `Offer` (`product`, `image`, `company`) VALUES (?, ?, ?)",
-        [this.offer.product, this.offer.image, this.offer.company],
+        "INSERT INTO `Offer` (`image`, `company`) VALUES (?, ?)",
+        [this.offer.image, this.offer.company],
         function (err) {
           if (err) reject(err);
           resolve({ success: true, id: this.lastID });
@@ -27,21 +27,16 @@ module.exports = class Offers {
     });
   }
 
-  async edit() {
+  static async delete({ ids }) {
     return new Promise((resolve, reject) => {
-      db.run(
-        "UPDATE `Offer` SET `image` = ?, `company` = ?, `product` = ? WHERE `id` = ?",
-        [
-          this.offer.image,
-          this.offer.company,
-          this.offer.product,
-          this.offer.id,
-        ],
-        function (err) {
-          if (err) reject(err);
-          resolve({ success: true, changes: this.changes });
-        }
-      );
+      const sql = `DELETE FROM Offer WHERE id IN (${ids
+        .map(() => "?")
+        .join(",")})`;
+
+      db.run(sql, ids, function (err) {
+        if (err) reject(err);
+        resolve();
+      });
     });
   }
 };

@@ -13,11 +13,19 @@ const storage = multer.diskStorage({
       dir = "./public/talgtna/img/compony";
     }
 
+    if (req.url.includes("offers")) {
+      dir = "./public/talgtna/img/offer";
+    }
+
     cb(null, dir);
   },
   filename: function (req, file, cb) {
-    const ext = path.extname(file.originalname); // Get .png, .jpg, etc.
-    cb(null, req.body.name + ext);
+    const ext = path.extname(file.originalname);
+    let name = path.basename(file.originalname, ext);
+    if (req.url.includes("companies")) {
+      name = req.body.name;
+    }
+    cb(null, `${name}${ext}`);
   },
 });
 
@@ -48,6 +56,30 @@ router.post(
   upload.single("image"),
   controller.AdminAddCompanies
 );
-router.delete("/companies", ValidateToken, controller.AdminDeleteCompanies);
+router.post(
+  "/companies/delete",
+  ValidateToken,
+  controller.AdminDeleteCompanies
+);
+
+router.get("/categories", ValidateToken, controller.AdminCategories);
+router.post("/categories", ValidateToken, controller.AdminAddCategories);
+router.post(
+  "/categories/delete",
+  ValidateToken,
+  controller.AdminDeleteCategories
+);
+
+router.get("/contacts", ValidateToken, controller.AdminContacts);
+router.post("/contacts/delete", ValidateToken, controller.AdminDeleteContacts);
+
+router.get("/offers", ValidateToken, controller.AdminOffers);
+router.post(
+  "/offers",
+  ValidateToken,
+  upload.single("image"),
+  controller.AdminAddOffers
+);
+router.post("/offers/delete", ValidateToken, controller.AdminDeleteOffers);
 
 module.exports = router;

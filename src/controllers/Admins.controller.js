@@ -5,6 +5,9 @@ const OrderProductsModel = require("../models/OrderProducts.model");
 const ProductModel = require("../models/Products.model");
 const CategoryModel = require("../models/Categories.model");
 const CompanyModel = require("../models/Companies.model");
+const ContactModel = require("../models/Contacts.model");
+const OfferModel = require("../models/Offers.model");
+const path = require("path");
 const jwt = require("jsonwebtoken");
 
 const AdminLogin = async (req, res) => {
@@ -158,7 +161,8 @@ const AdminAddProducts = async (req, res) => {
 
 const AdminCompanies = async (req, res) => {
   try {
-    const companies = await CompanyModel.getAll();
+    const search = req.query.search;
+    const companies = await CompanyModel.getAll({ search });
     res.json({ companies: companies });
   } catch (err) {
     console.error(err);
@@ -170,7 +174,8 @@ const AdminAddCompanies = async (req, res) => {
   try {
     const company = req.body;
 
-    const image = `/img/compony/${company.name}`;
+    const ext = path.extname(req.file.originalname);
+    const image = `/img/compony/${company.name}${ext}`;
 
     Object.assign(company, { image });
 
@@ -193,6 +198,97 @@ const AdminDeleteCompanies = async (req, res) => {
   }
 };
 
+const AdminCategories = async (req, res) => {
+  try {
+    const search = req.query.search;
+    const categories = await CategoryModel.getAll({ search });
+    res.json({ categories: categories });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Internal Server Error");
+  }
+};
+
+const AdminDeleteCategories = async (req, res) => {
+  try {
+    const ids = req.body.ids;
+    await CategoryModel.delete(ids);
+    res.status(200).json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Internal Server Error");
+  }
+};
+
+const AdminAddCategories = async (req, res) => {
+  try {
+    const category = req.body;
+    await new CategoryModel(category).add();
+    res.status(200).json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Internal Server Error");
+  }
+};
+
+const AdminContacts = async (req, res) => {
+  try {
+    const search = req.query.search;
+    const contacts = await ContactModel.getAll({ search });
+    res.json({ contacts: contacts });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Internal Server Error");
+  }
+};
+
+const AdminDeleteContacts = async (req, res) => {
+  try {
+    const ids = req.body.ids;
+    await ContactModel.delete({ ids });
+    res.status(200).json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Internal Server Error");
+  }
+};
+
+const AdminOffers = async (req, res) => {
+  try {
+    const offers = await OfferModel.getAll();
+    const companies = await CompanyModel.getAll({ search: "" });
+    res.json({ offers: offers, companies: companies });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Internal Server Error");
+  }
+};
+
+const AdminAddOffers = async (req, res) => {
+  try {
+    const offer = req.body;
+    const image = `/img/offer/${req.file.originalname}`;
+
+    Object.assign(offer, { image });
+    await new OfferModel(offer).add();
+    res.status(200).json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Internal Server Error");
+  }
+};
+
+const AdminDeleteOffers = async (req, res) => {
+  try {
+    const ids = req.body.ids;
+    await OfferModel.delete({ ids });
+    res.status(200).json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Internal Server Error");
+  }
+};
+
 module.exports = {
   AdminLogin,
   AdminDashboard,
@@ -206,4 +302,12 @@ module.exports = {
   AdminCompanies,
   AdminAddCompanies,
   AdminDeleteCompanies,
+  AdminCategories,
+  AdminDeleteCategories,
+  AdminAddCategories,
+  AdminContacts,
+  AdminDeleteContacts,
+  AdminOffers,
+  AdminDeleteOffers,
+  AdminAddOffers,
 };

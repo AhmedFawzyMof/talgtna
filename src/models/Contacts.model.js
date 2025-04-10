@@ -5,11 +5,32 @@ module.exports = class Contact {
     this.contact = contact;
   }
 
-  static async getAll() {
+  static async getAll({ search }) {
     return new Promise((resolve, reject) => {
-      db.all("SELECT * FROM `Contact`", [], (err, rows) => {
+      let sql = "SELECT * FROM `Contact`";
+      const inputs = [];
+
+      if (search !== undefined && search !== "") {
+        sql += " WHERE name LIKE ?";
+        inputs.push("%" + search + "%");
+      }
+
+      db.all(sql, inputs, (err, rows) => {
         if (err) reject(err);
         resolve(rows);
+      });
+    });
+  }
+
+  static async delete({ ids }) {
+    return new Promise((resolve, reject) => {
+      const sql = `DELETE FROM Contact WHERE id IN (${ids
+        .map(() => "?")
+        .join(",")})`;
+
+      db.run(sql, ids, function (err) {
+        if (err) reject(err);
+        resolve();
       });
     });
   }
@@ -17,21 +38,16 @@ module.exports = class Contact {
   async add() {
     return new Promise((resolve, reject) => {
       db.run(
-        "INSERT INTO `Contact` (`name`, `email`, `phone`, `message`, `seen`) VALUES (?, ?, ?, ?, ?)",
+        "INSERT INTO `Contact` (`name`, `email`, `phone`, `message`) VALUES (?, ?, ?, ?)",
         [
           this.contact.name,
           this.contact.email,
           this.contact.phone,
           this.contact.message,
-          this.contact.seen,
         ],
         function (err) {
-          if (err) {
-            console.error(err);
-            reject(err);
-          } else {
-            resolve({ success: true, id: this.lastID });
-          }
+          if (err) reject(err);
+          resolve();
         }
       );
     });

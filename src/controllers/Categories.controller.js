@@ -5,7 +5,7 @@ const ProductByCategory = async (req, res) => {
   try {
     const name = req.params.name;
     const offers = await Offers.getAll();
-    const categories = await Categories.getAll();
+    const categories = await Categories.getAll({ search: "" });
     const products = await new Products({
       category: name,
     }).byCategory();

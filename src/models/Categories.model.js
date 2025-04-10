@@ -5,9 +5,17 @@ module.exports = class Categories {
     this.category = category;
   }
 
-  static async getAll() {
+  static async getAll({ search }) {
     return new Promise((resolve, reject) => {
-      db.all("SELECT * FROM `Categories`", [], (err, rows) => {
+      let sql = "SELECT * FROM `Categories`";
+      const inputs = [];
+
+      if (search !== undefined && search !== "") {
+        sql += " WHERE name LIKE ?";
+        inputs.push("%" + search + "%");
+      }
+
+      db.all(sql, inputs, (err, rows) => {
         if (err) reject(err);
         resolve(rows);
       });
@@ -21,22 +29,22 @@ module.exports = class Categories {
         [this.category.name],
         function (err) {
           if (err) reject(err);
-          resolve({ success: true, id: this.lastID });
+          resolve();
         }
       );
     });
   }
 
-  async edit() {
+  static async delete(ids) {
     return new Promise((resolve, reject) => {
-      db.run(
-        "UPDATE `Categories` SET `name_ar` = ? WHERE `id` = ?",
-        [this.category.name, this.category.id],
-        function (err) {
-          if (err) reject(err);
-          resolve({ success: true, changes: this.changes });
-        }
-      );
+      const sql = `DELETE FROM Categories WHERE id IN (${ids
+        .map(() => "?")
+        .join(",")})`;
+
+      db.run(sql, ids, function (err) {
+        if (err) reject(err);
+        resolve();
+      });
     });
   }
 };

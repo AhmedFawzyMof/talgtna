@@ -6,9 +6,17 @@ module.exports = class Companies {
     this.image = image;
   }
 
-  static async getAll() {
+  static async getAll({ search }) {
     return new Promise((resolve, reject) => {
-      db.all("SELECT * FROM `Companies`", (err, rows) => {
+      let sql = "SELECT * FROM `Companies`";
+      const inputs = [];
+
+      if (search !== undefined && search !== "") {
+        sql += " WHERE name LIKE ?";
+        inputs.push("%" + search + "%");
+      }
+
+      db.all(sql, inputs, (err, rows) => {
         if (err) reject(err);
         else resolve(rows);
       });
