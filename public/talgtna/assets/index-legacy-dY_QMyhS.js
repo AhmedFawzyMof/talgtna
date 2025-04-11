@@ -35574,26 +35574,35 @@ System.register([], function (e, t) {
       }
       function cC() {
         const e = ky((e) => e),
-          t = Vp().pathname;
-        return "/cart" === t || "/order" === t
-          ? null
-          : Z.jsxs("div", {
-              className:
-                "fixed bottom-10 right-4 z-30 bg-white p-3 shadow-lg rounded flex flex-col gap-3",
-              children: [
-                Z.jsxs("p", {
-                  children: [
-                    "عدد المنتجات في سلة التسوق: ",
-                    e.getTotalQuantity(),
-                  ],
-                }),
-                Z.jsx(Px, {
-                  href: "/cart",
-                  className: "bg-primary font-bold",
-                  children: "انتقل إلى عربة التسوق لإكمال الطلب",
-                }),
-              ],
-            });
+          [t, r] = Q.useState(!1),
+          n = Vp().pathname;
+        return (
+          Q.useEffect(() => {
+            e.getTotalQuantity() > 0 && r(!0);
+          }, []),
+          Q.useEffect(() => {
+            ("/cart" !== n && "/order" !== n) || r(!1);
+          }, [n]),
+          t
+            ? Z.jsxs("div", {
+                className:
+                  "fixed bottom-10 right-4 z-30 bg-white p-3 shadow-lg rounded flex flex-col gap-3",
+                children: [
+                  Z.jsxs("p", {
+                    children: [
+                      "عدد المنتجات في سلة التسوق: ",
+                      e.getTotalQuantity(),
+                    ],
+                  }),
+                  Z.jsx(Px, {
+                    href: "/cart",
+                    className: "bg-primary font-bold",
+                    children: "انتقل إلى عربة التسوق لإكمال الطلب",
+                  }),
+                ],
+              })
+            : null
+        );
       }
       IN.displayName = "ToggleSwitch";
       const dC = new mg();
