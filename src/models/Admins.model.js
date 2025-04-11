@@ -56,7 +56,7 @@ SELECT
     COALESCE(SUM(Orders.total), 0) AS monthly_total
 FROM months
 LEFT JOIN Orders ON strftime('%Y-%m', Orders.created_at) = strftime('%Y-%m', months.date)
-    AND Orders.created_at >= date('now', '-12 months') AND Orders.delivered = 1 AND Orders.paid = 1
+    AND Orders.created_at >= date('now', '-12 months') AND Orders.delivered = 1
 GROUP BY strftime('%Y-%m', months.date)
 ORDER BY month;`,
         [],

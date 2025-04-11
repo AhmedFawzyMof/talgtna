@@ -65,8 +65,8 @@ const AdminProducts = async (req, res) => {
       limit,
       search,
     });
-    const categories = await CategoryModel.getAll();
-    const companies = await CompanyModel.getAll();
+    const categories = await CategoryModel.getAll({ search: "" });
+    const companies = await CompanyModel.getAll({ search: "" });
     const totalPages = Math.ceil(totalProducts / 50);
     res.json({ products: products, totalPages, categories, companies });
   } catch (err) {
@@ -198,6 +198,18 @@ const AdminDeleteCompanies = async (req, res) => {
   }
 };
 
+const AdminEditCompanies = async (req, res) => {
+  try {
+    const company = req.body;
+    console.log(company);
+    await new CompanyModel(company).edit();
+    res.status(200).json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Internal Server Error");
+  }
+};
+
 const AdminCategories = async (req, res) => {
   try {
     const search = req.query.search;
@@ -236,6 +248,17 @@ const AdminContacts = async (req, res) => {
     const search = req.query.search;
     const contacts = await ContactModel.getAll({ search });
     res.json({ contacts: contacts });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Internal Server Error");
+  }
+};
+
+const AdminEditContacts = async (req, res) => {
+  try {
+    const contact = req.body;
+    await new ContactModel(contact).edit();
+    res.status(200).json({ success: true });
   } catch (err) {
     console.error(err);
     res.status(500).send("Internal Server Error");
@@ -289,6 +312,22 @@ const AdminDeleteOffers = async (req, res) => {
   }
 };
 
+const AdminCounters = async (req, res) => {
+  try {
+    const ordersCount = await OrderModel.count();
+    const contactCount = await ContactModel.count();
+    res.json({
+      counters: {
+        orders_count: ordersCount.orders_count,
+        contact_count: contactCount.contact_count,
+      },
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Internal Server Error");
+  }
+};
+
 module.exports = {
   AdminLogin,
   AdminDashboard,
@@ -302,6 +341,7 @@ module.exports = {
   AdminCompanies,
   AdminAddCompanies,
   AdminDeleteCompanies,
+  AdminEditCompanies,
   AdminCategories,
   AdminDeleteCategories,
   AdminAddCategories,
@@ -310,4 +350,6 @@ module.exports = {
   AdminOffers,
   AdminDeleteOffers,
   AdminAddOffers,
+  AdminEditContacts,
+  AdminCounters,
 };

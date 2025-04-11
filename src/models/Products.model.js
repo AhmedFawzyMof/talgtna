@@ -15,7 +15,20 @@ module.exports = class Products {
   }
 
   async byCategory() {
-    return new Promise((resolve, reject) => {
+    if (this.product.user) {
+      this.product.favorites = await new Promise((resolve, reject) => {
+        db.all(
+          "SELECT favourite.product FROM `favourite` INNER JOIN Products ON favourite.product = Products.id WHERE favourite.`user` = ? AND Products.category = ?",
+          [this.product.user, this.product.category],
+          (err, rows) => {
+            if (err) reject(err);
+            resolve(rows);
+          }
+        );
+      });
+    }
+
+    const products = await new Promise((resolve, reject) => {
       db.all(
         "SELECT * FROM `Products` WHERE category = ? ORDER BY available DESC",
         [this.product.category],
@@ -25,19 +38,35 @@ module.exports = class Products {
         }
       );
     });
+
+    return { products, favorites: this.product.favorites };
   }
 
-  static async bySearch({ query }) {
-    return new Promise((resolve, reject) => {
+  async bySearch() {
+    if (this.product.user) {
+      this.product.favorites = await new Promise((resolve, reject) => {
+        db.all(
+          "SELECT product FROM `favourite` WHERE user = ?",
+          [this.product.user],
+          (err, rows) => {
+            if (err) reject(err);
+            resolve(rows);
+          }
+        );
+      });
+    }
+    const products = await new Promise((resolve, reject) => {
       db.all(
         "SELECT * FROM `Products` WHERE name LIKE ? ORDER BY available DESC",
-        ["%" + query + "%"],
+        ["%" + this.product.query + "%"],
         (err, rows) => {
           if (err) reject(err);
           resolve(rows);
         }
       );
     });
+
+    return { products, favorites: this.product.favorites };
   }
 
   async inFavorite({ userId }) {
@@ -54,7 +83,19 @@ module.exports = class Products {
   }
 
   async byCompany() {
-    return new Promise((resolve, reject) => {
+    if (this.product.user) {
+      this.product.favorites = await new Promise((resolve, reject) => {
+        db.all(
+          "SELECT favourite.product FROM `favourite` INNER JOIN Products ON favourite.product = Products.id WHERE favourite.`user` = ? AND Products.company = ?",
+          [this.product.user, this.product.company],
+          (err, rows) => {
+            if (err) reject(err);
+            resolve(rows);
+          }
+        );
+      });
+    }
+    const products = await new Promise((resolve, reject) => {
       db.all(
         "SELECT * FROM `Products` WHERE company = ? ORDER BY available DESC",
         [this.product.company],
@@ -64,6 +105,8 @@ module.exports = class Products {
         }
       );
     });
+
+    return { products, favorites: this.product.favorites };
   }
 
   async add() {

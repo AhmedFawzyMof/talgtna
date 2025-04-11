@@ -6,66 +6,97 @@ const Userid = require("../utils/getUserId");
 const { getCurrentDay } = require("../utils/date");
 
 const AddOrder = async (req, res) => {
-  const body = req.body;
+  try {
+    const {
+      phone,
+      spare_phone,
+      street,
+      building,
+      floor,
+      city,
+      name,
+      cart,
+      method,
+      discount,
+    } = req.body;
 
-  const userData = {
-    phone: body.phone,
-    spare_phone: body.spare_phone,
-    street: body.street,
-    building: body.building,
-    floor: body.floor,
-    city: body.city,
-    name: body.name,
-  };
-
-  let token = "";
-
-  if (req.headers.authorization) {
-    token = req.headers.authorization.split(" ")[1];
-  }
-
-  if (!token) {
-    const findUser = await new Users({
-      phone: body.phone,
-      spare_phone: body.spare_phone,
-    }).find();
-
-    if (!findUser.id) {
-      const user = await new Users(userData).add();
-      token = jwt.sign({ id: user.id }, process.env.SECRET_KEY);
-    } else {
-      token = jwt.sign({ id: findUser.id }, process.env.SECRET_KEY);
+    if (!phone || !cart || !method) {
+      return res.status(400).json({ error: "Missing required fields" });
     }
-  }
 
-  const orderTotal = async () => {
-    return await new OrderProducts({ products: body.cart }).total();
-  };
+    const userData = {
+      phone,
+      spare_phone,
+      street,
+      building,
+      floor,
+      city,
+      name,
+    };
 
-  const created_at = getCurrentDay();
+    let token = "";
+    let userId = null;
+    let favorites = 0;
 
-  const { total, cart } = await orderTotal();
+    if (req.headers.authorization) {
+      try {
+        token = req.headers.authorization.split(" ")[1];
+        userId = Userid.UserId(token);
+        favorites = await new Users({ id: userId }).favorites();
+      } catch (error) {
+        return res.status(401).json({ error: "Invalid token" });
+      }
+    } else {
+      const foundUser = await new Users({ phone, spare_phone }).find();
 
-  const order = await new Orders({
-    order: {
-      user: Userid.UserId(token),
-      method: body.method,
-      discount: body.discount,
-      delivered: 0,
-      paid: 0,
-      created_at: created_at,
-      total: total,
-    },
-  }).add();
+      if (foundUser.id) {
+        token = jwt.sign({ id: foundUser.id }, process.env.SECRET_KEY);
+        userId = foundUser.id;
+        favorites = foundUser.favorites;
+      } else {
+        const newUser = await new Users(userData).add();
+        token = jwt.sign({ id: newUser.id }, process.env.SECRET_KEY);
+        userId = newUser.id;
+        favorites = newUser.favorites;
+      }
+    }
 
-  await new OrderProducts({
-    order: order.id,
-    orderproducts: {
+    const { total, cart: processedCart } = await new OrderProducts({
       products: cart,
-    },
-  }).add();
+    }).total();
 
-  res.json({ token: token, order: order.id });
+    const order = await new Orders({
+      order: {
+        user: userId,
+        method,
+        discount,
+        delivered: 0,
+        processing: 0,
+        created_at: getCurrentDay(),
+        total,
+      },
+    }).add();
+
+    await new OrderProducts({
+      order: order.id,
+      orderproducts: {
+        products: processedCart,
+      },
+    }).add();
+
+    return res.json({
+      token,
+      order: order.id,
+      favorites,
+      success: true,
+    });
+  } catch (error) {
+    console.error("Order processing error:", error);
+    return res.status(500).json({
+      error: "Failed to process order",
+      message: error.message,
+    });
+  }
 };
 
 const GetOrders = async (req, res) => {

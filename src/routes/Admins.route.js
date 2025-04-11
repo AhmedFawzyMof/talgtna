@@ -61,6 +61,7 @@ router.post(
   ValidateToken,
   controller.AdminDeleteCompanies
 );
+router.put("/companies/:id", ValidateToken, controller.AdminEditCompanies);
 
 router.get("/categories", ValidateToken, controller.AdminCategories);
 router.post("/categories", ValidateToken, controller.AdminAddCategories);
@@ -72,6 +73,7 @@ router.post(
 
 router.get("/contacts", ValidateToken, controller.AdminContacts);
 router.post("/contacts/delete", ValidateToken, controller.AdminDeleteContacts);
+router.put("/contacts/:id", ValidateToken, controller.AdminEditContacts);
 
 router.get("/offers", ValidateToken, controller.AdminOffers);
 router.post(
@@ -81,5 +83,7 @@ router.post(
   controller.AdminAddOffers
 );
 router.post("/offers/delete", ValidateToken, controller.AdminDeleteOffers);
+
+router.get("/counters", ValidateToken, controller.AdminCounters);
 
 module.exports = router;

@@ -1,4 +1,6 @@
 const Products = require("../models/Products.model");
+const UserId = require("../utils/getUserId");
+
 const ProductById = async (req, res) => {
   try {
     const id = parseInt(req.params.id);
@@ -12,9 +14,17 @@ const ProductById = async (req, res) => {
 
 const ProductsBySearch = async (req, res) => {
   try {
+    const token = req.headers.authorization.split(" ")[1];
+
+    let id;
+
+    if (token) {
+      id = UserId.UserId(token);
+    }
+
     const query = req.body.query;
-    const products = await Products.bySearch({ query });
-    res.json({ products: products });
+    const products = await new Products({ query, user: id }).bySearch();
+    res.json({ products: products.products, favorites: products.favorites });
   } catch (err) {
     console.error(err);
   }

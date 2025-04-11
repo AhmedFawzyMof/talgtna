@@ -50,17 +50,30 @@ module.exports = class Users {
   }
 
   async find() {
-    return new Promise((resolve, reject) => {
+    const user_id = await new Promise((resolve, reject) => {
       const sql = `SELECT * FROM Users WHERE phone = ? OR spare_phone = ?`;
       db.get(sql, [this.user.phone, this.user.spare_phone], (err, row) => {
         if (err) reject(err);
         resolve(row ? { id: row.id } : { id: null });
       });
     });
+
+    const user_favorites = await new Promise((resolve, reject) => {
+      db.get(
+        "SELECT COUNT(product) as favorites FROM favourite WHERE user = ?",
+        [user_id.id],
+        function (err, row) {
+          if (err) reject(err);
+          resolve(row);
+        }
+      );
+    });
+
+    return { id: user_id.id, favorites: user_favorites.favorites };
   }
 
   async add() {
-    return new Promise((resolve, reject) => {
+    const user_id = await new Promise((resolve, reject) => {
       const id = uuidv4();
 
       const coupons = [];
@@ -94,6 +107,19 @@ module.exports = class Users {
         }
       );
     });
+
+    const user_favorites = await new Promise((resolve, reject) => {
+      db.get(
+        "SELECT COUNT(product) as favorites FROM favourite WHERE user = ?",
+        [user_id.id],
+        function (err, row) {
+          if (err) reject(err);
+          resolve(row);
+        }
+      );
+    });
+
+    return { id: user_id.id, favorites: user_favorites.favorites };
   }
 
   async update() {
