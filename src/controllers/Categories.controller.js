@@ -1,5 +1,5 @@
 const Offers = require("../models/Offers.model");
-const Categories = require("../models/Categories.model");
+const Companies = require("../models/Companies.model");
 const Products = require("../models/Products.model");
 const UserId = require("../utils/getUserId");
 
@@ -15,14 +15,14 @@ const ProductByCategory = async (req, res) => {
 
     const name = req.params.name;
     const offers = await Offers.getAll();
-    const categories = await Categories.getAll({ search: "" });
+    const companies = await Companies.getAll({ search: "" });
     const products = await new Products({
       category: name,
       user: id,
     }).byCategory();
 
     res.json({
-      categories: categories,
+      companies: companies,
       offers: offers,
       products: products.products,
       favorites: products.favorites,

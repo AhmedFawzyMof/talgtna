@@ -328,6 +328,23 @@ const AdminCounters = async (req, res) => {
   }
 };
 
+const AdminReceipt = async (req, res) => {
+  try {
+    const id = req.params.id;
+    const receipt = await new OrderModel({ id }).byId();
+
+    const ordersIds = [receipt.id];
+    const products = await OrderProductsModel.adminOrderProducts(ordersIds);
+
+    receipt.products = products;
+
+    res.status(200).json({ receipt: receipt });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Internal Server Error");
+  }
+};
+
 module.exports = {
   AdminLogin,
   AdminDashboard,
@@ -352,4 +369,5 @@ module.exports = {
   AdminAddOffers,
   AdminEditContacts,
   AdminCounters,
+  AdminReceipt,
 };

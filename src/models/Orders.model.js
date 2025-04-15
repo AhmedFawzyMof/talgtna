@@ -10,6 +10,19 @@ module.exports = class Orders {
     this.order = order;
   }
 
+  async byId() {
+    return new Promise((resolve, reject) => {
+      db.get(
+        "SELECT Orders.id, Users.name as user, Users.phone, Users.spare_phone, Users.building, Users.floor, Users.street, Users.city, Orders.created_at, Orders.total, Orders.delivered, Orders.processing, Orders.discount, Orders.method FROM `Orders` INNER JOIN Users ON Orders.user = Users.id WHERE Orders.id = ?",
+        [this.order.id],
+        (err, row) => {
+          if (err) reject(err);
+          resolve(row);
+        }
+      );
+    });
+  }
+
   async add() {
     const { order } = this.order;
 
