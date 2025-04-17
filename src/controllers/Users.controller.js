@@ -59,7 +59,10 @@ const GetFavorites = async (req, res) => {
 
     const products = await Products.byFavorite({ userId: id });
 
-    res.json({ products: products });
+    res.json({
+      products: products.products,
+      favorites: products.favorites.count,
+    });
   } catch (err) {
     console.error(err);
     res.status(500).send("Internal Server Error");

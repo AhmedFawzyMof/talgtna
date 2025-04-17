@@ -24,9 +24,9 @@ module.exports = class Users {
   }
 
   async byId() {
-    return new Promise((resolve, reject) => {
+    const user_id = await new Promise((resolve, reject) => {
       db.get(
-        "SELECT * FROM `Users` WHERE id = ?",
+        "SELECT id FROM `Users` WHERE id = ?",
         [this.user.id],
         (err, row) => {
           if (err) reject(err);
@@ -34,6 +34,19 @@ module.exports = class Users {
         }
       );
     });
+
+    const user_favorites = await new Promise((resolve, reject) => {
+      db.get(
+        "SELECT COUNT(product) as favorites FROM favourite WHERE user = ?",
+        [user_id.id],
+        function (err, row) {
+          if (err) reject(err);
+          resolve(row);
+        }
+      );
+    });
+
+    return { id: user_id.id, favorites: user_favorites.favorites };
   }
 
   async cashback() {
@@ -73,10 +86,14 @@ module.exports = class Users {
   }
 
   async add() {
+    const user_found = await this.find();
+
+    if (user_found.id) {
+      return { id: user_found.id, favorites: user_found.favorites };
+    }
+
     const user_id = await new Promise((resolve, reject) => {
       const id = uuidv4();
-
-      const coupons = [];
 
       const created_at = new Intl.DateTimeFormat("en-EG", {
         year: "numeric",
@@ -88,12 +105,11 @@ module.exports = class Users {
       }).format(new Date());
 
       db.run(
-        "INSERT INTO `Users` (`id`, `name`, `phone`, `coupons`, `spare_phone`, `street`, `building`, `floor`,`created_at`, `city`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO `Users` (`id`, `name`, `phone`, `spare_phone`, `street`, `building`, `floor`,`created_at`, `city`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
         [
           id,
           this.user.name,
           this.user.phone,
-          JSON.stringify(coupons),
           this.user.spare_phone,
           this.user.street,
           this.user.building,
@@ -240,5 +256,18 @@ module.exports = class Users {
     });
 
     return { totalUsers: totalUsers.total, users };
+  }
+
+  async addCoins() {
+    return new Promise((resolve, reject) => {
+      db.run(
+        "UPDATE Users SET `coins` = `coins` + ? WHERE id = ?",
+        [this.user.coins, this.user.id],
+        (err) => {
+          if (err) reject(err);
+          resolve();
+        }
+      );
+    });
   }
 };

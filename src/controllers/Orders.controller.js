@@ -1,6 +1,7 @@
 const Users = require("../models/Users.model");
 const Orders = require("../models/Orders.model");
 const OrderProducts = require("../models/OrderProducts.model");
+const Discount = require("../models/Discount.model");
 const jwt = require("jsonwebtoken");
 const Userid = require("../utils/getUserId");
 const { getCurrentDay } = require("../utils/date");
@@ -20,6 +21,12 @@ const AddOrder = async (req, res) => {
       discount,
     } = req.body;
 
+    let token = null;
+
+    if (req.headers.authorization) {
+      token = req.headers.authorization.split(" ")[1];
+    }
+
     if (!phone || !cart || !method) {
       return res.status(400).json({ error: "Missing required fields" });
     }
@@ -34,30 +41,32 @@ const AddOrder = async (req, res) => {
       name,
     };
 
-    let token = "";
     let userId = null;
     let favorites = 0;
 
-    if (req.headers.authorization) {
-      try {
-        token = req.headers.authorization.split(" ")[1];
-        userId = Userid.UserId(token);
-        favorites = await new Users({ id: userId }).favorites();
-      } catch (error) {
-        return res.status(401).json({ error: "Invalid token" });
-      }
+    if (!token) {
+      const user = await new Users(userData).add();
+      userId = user.id;
+      favorites = user.favorites;
+      token = jwt.sign({ id: userId }, process.env.SECRET_KEY);
     } else {
-      const foundUser = await new Users({ phone, spare_phone }).find();
+      userId = Userid.UserId(token);
+      const user = await new Users({ id: userId }).byId();
+      favorites = user.favorites;
+    }
 
-      if (foundUser.id) {
-        token = jwt.sign({ id: foundUser.id }, process.env.SECRET_KEY);
-        userId = foundUser.id;
-        favorites = foundUser.favorites;
-      } else {
-        const newUser = await new Users(userData).add();
-        token = jwt.sign({ id: newUser.id }, process.env.SECRET_KEY);
-        userId = newUser.id;
-        favorites = newUser.favorites;
+    let usedDiscount;
+
+    if (discount.code != "") {
+      usedDiscount = await new Discount({
+        user: userId,
+        code: discount.code,
+      }).check();
+    }
+
+    if (usedDiscount) {
+      if (!usedDiscount.success) {
+        return res.status(400).json({ error: usedDiscount.message });
       }
     }
 
@@ -72,6 +81,7 @@ const AddOrder = async (req, res) => {
         discount,
         delivered: 0,
         processing: 0,
+        city,
         created_at: getCurrentDay(),
         total,
       },
@@ -84,6 +94,11 @@ const AddOrder = async (req, res) => {
       },
     }).add();
 
+    await new Users({
+      id: userId,
+      coins: total,
+    }).addCoins();
+
     return res.json({
       token,
       order: order.id,
@@ -92,7 +107,7 @@ const AddOrder = async (req, res) => {
     });
   } catch (error) {
     console.error("Order processing error:", error);
-    return res.status(500).json({
+    res.status(500).json({
       error: "Failed to process order",
       message: error.message,
     });
@@ -110,18 +125,16 @@ const GetOrders = async (req, res) => {
     const user = Userid.UserId(token);
 
     const orders = await new Orders({ user: user }).getAll();
+    const cities = await new Orders().getCities();
 
-    const ordersArry = await Promise.all(
-      orders.map(async (order) => {
-        const product = await new OrderProducts({
-          order: order.id,
-        }).getAll();
+    async function enrichOrderWithProducts(order) {
+      const products = await new OrderProducts({ order: order.id }).getAll();
+      return { ...order, products };
+    }
 
-        return { ...order, products: product };
-      })
-    );
+    const ordersArry = await Promise.all(orders.map(enrichOrderWithProducts));
 
-    res.json({ orders: ordersArry });
+    res.json({ orders: ordersArry, cities });
   } catch (err) {
     console.error(err);
     res.status(500).send("Internal Server Error");

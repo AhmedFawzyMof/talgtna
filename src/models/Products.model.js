@@ -30,7 +30,7 @@ module.exports = class Products {
 
     const products = await new Promise((resolve, reject) => {
       db.all(
-        "SELECT * FROM `Products` WHERE category = ? ORDER BY available DESC",
+        "SELECT * FROM `Products` WHERE category = ? AND deleted = 0 ORDER BY available DESC",
         [this.product.category],
         (err, rows) => {
           if (err) reject(err);
@@ -57,7 +57,7 @@ module.exports = class Products {
     }
     const products = await new Promise((resolve, reject) => {
       db.all(
-        "SELECT * FROM `Products` WHERE name LIKE ? ORDER BY available DESC",
+        "SELECT * FROM `Products` WHERE name LIKE ? AND deleted = 0 ORDER BY available DESC",
         ["%" + this.product.query + "%"],
         (err, rows) => {
           if (err) reject(err);
@@ -72,7 +72,7 @@ module.exports = class Products {
   async inFavorite({ userId }) {
     return new Promise((resolve, reject) => {
       db.get(
-        "SELECT * FROM `favourite` WHERE `user` = ? AND `product` = ?",
+        "SELECT * FROM `favourite` WHERE `user` = ? AND `deleted` = 0 AND `product` = ?",
         [userId, this.product.id],
         (err, row) => {
           if (err) reject(err);
@@ -95,15 +95,22 @@ module.exports = class Products {
         );
       });
     }
+
     const products = await new Promise((resolve, reject) => {
-      db.all(
-        "SELECT * FROM `Products` WHERE company = ? ORDER BY available DESC",
-        [this.product.company],
-        (err, rows) => {
-          if (err) reject(err);
-          resolve(rows);
-        }
-      );
+      let sql = "SELECT * FROM `Products` WHERE company = ?";
+      const inputs = [this.product.company];
+
+      if (this.product.category !== "") {
+        sql += " AND category = ?";
+        inputs.push(this.product.category);
+      }
+
+      sql += " AND deleted = 0 ORDER BY available DESC";
+
+      db.all(sql, inputs, (err, rows) => {
+        if (err) reject(err);
+        resolve(rows);
+      });
     });
 
     return { products, favorites: this.product.favorites };
@@ -163,9 +170,9 @@ module.exports = class Products {
   }
 
   static async byFavorite({ userId }) {
-    return new Promise((resolve, reject) => {
+    const products = await new Promise((resolve, reject) => {
       db.all(
-        "SELECT favourite.product, favourite.user, Products.name, Products.image, Products.price, Products.available, Products.id FROM `favourite` INNER JOIN `Products` ON favourite.product = Products.id WHERE user = ?",
+        "SELECT favourite.product, favourite.user, Products.name, Products.image, Products.price, Products.available, Products.id FROM `favourite` INNER JOIN `Products` ON favourite.product = Products.id WHERE user = ? AND Products.deleted = 0 AND Products.available = 0",
         [userId],
         (err, rows) => {
           if (err) {
@@ -177,12 +184,25 @@ module.exports = class Products {
         }
       );
     });
+
+    const favorites = await new Promise((resolve, reject) => {
+      db.get(
+        "SELECT COUNT(product) as count FROM `favourite` INNER JOIN `Products` ON favourite.product = Products.id WHERE user = ? AND Products.deleted = 0 AND Products.available = 0",
+        [userId],
+        (err, rows) => {
+          if (err) reject(err);
+          resolve(rows);
+        }
+      );
+    });
+
+    return { products, favorites };
   }
 
   async byId() {
     return new Promise((resolve, reject) => {
       db.get(
-        "SELECT * FROM `Products` WHERE id = ?",
+        "SELECT * FROM `Products` WHERE id = ? AND deleted = 0",
         [this.product.id],
         (err, row) => {
           if (err) reject(err);
@@ -239,6 +259,19 @@ module.exports = class Products {
         if (err) reject(err);
         resolve();
       });
+    });
+  }
+
+  async available() {
+    return new Promise((resolve, reject) => {
+      db.run(
+        "UPDATE `Products` SET `available` = ? WHERE company = ?",
+        [this.product.soon, this.product.company],
+        (err) => {
+          if (err) reject(err);
+          resolve();
+        }
+      );
     });
   }
 };

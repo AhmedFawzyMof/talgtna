@@ -37,13 +37,12 @@ module.exports = class Companies {
 
   async edit() {
     return new Promise((resolve, reject) => {
-      console.log(this);
       db.run(
-        "UPDATE `Companies` SET `soon` = ? WHERE `id` = ?",
-        [this.company.soon, this.company.id],
+        "UPDATE `Companies` SET `soon` = ? WHERE `name` = ?",
+        [this.company.soon, this.company.name],
         (err) => {
           if (err) reject(err);
-          else resolve({ success: true });
+          resolve({ success: true });
         }
       );
     });

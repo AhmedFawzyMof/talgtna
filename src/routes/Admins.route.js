@@ -86,6 +86,9 @@ router.post("/offers/delete", ValidateToken, controller.AdminDeleteOffers);
 
 router.get("/counters", ValidateToken, controller.AdminCounters);
 
+router.get("/admins", ValidateToken, controller.AdminAdmins);
+router.post("/admins", ValidateToken, controller.AdminAddAdmins);
+
 router.get("/receipt/:id", ValidateToken, controller.AdminReceipt);
 
 module.exports = router;

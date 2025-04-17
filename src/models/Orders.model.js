@@ -13,7 +13,7 @@ module.exports = class Orders {
   async byId() {
     return new Promise((resolve, reject) => {
       db.get(
-        "SELECT Orders.id, Users.name as user, Users.phone, Users.spare_phone, Users.building, Users.floor, Users.street, Users.city, Orders.created_at, Orders.total, Orders.delivered, Orders.processing, Orders.discount, Orders.method FROM `Orders` INNER JOIN Users ON Orders.user = Users.id WHERE Orders.id = ?",
+        "SELECT Orders.id, Users.name as user, Users.phone, Users.spare_phone, Users.building, Users.floor, Users.street, Orders.city, Orders.created_at, Orders.total, Orders.delivered, Orders.processing, Orders.discount, Orders.method FROM `Orders` INNER JOIN Users ON Orders.user = Users.id WHERE Orders.id = ?",
         [this.order.id],
         (err, row) => {
           if (err) reject(err);
@@ -30,7 +30,7 @@ module.exports = class Orders {
       const id = uuidv4();
 
       db.run(
-        "INSERT INTO `Orders` (`id`, `user`, `delivered`, `processing`, `discount`, `method`, `total`, `created_at`) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO `Orders` (`id`, `user`, `delivered`, `processing`, `discount`, `method`, `total`, `created_at`, `city`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
         [
           id,
           order.user,
@@ -40,9 +40,9 @@ module.exports = class Orders {
           order.method,
           order.total,
           order.created_at,
+          order.city,
         ],
         function (err) {
-          console.log(err);
           if (err) reject(err);
           resolve({ id: id });
         }
@@ -53,7 +53,7 @@ module.exports = class Orders {
   async getAll() {
     return new Promise((resolve, reject) => {
       db.all(
-        "SELECT id, created_at, method, discount, delivered, total FROM `Orders` WHERE user = ?",
+        "SELECT Orders.id, Orders.created_at, Orders.method, Orders.discount, Orders.delivered, Orders.total, Orders.processing, Orders.city FROM `Orders` WHERE Orders.user = ?",
         [this.order.user],
         (err, rows) => {
           if (err) reject(err);
@@ -138,7 +138,7 @@ module.exports = class Orders {
     const OFFSET = limit - 50;
     const orders = await new Promise((resolve, reject) => {
       let sql =
-        "SELECT Orders.id, Users.name as user, Users.phone, Users.spare_phone, Users.building, Users.floor, Users.street, Users.city, Orders.created_at, Orders.total, Orders.delivered, Orders.processing, Orders.discount, Orders.method FROM `Orders` INNER JOIN Users ON Orders.user = Users.id";
+        "SELECT Orders.id, Users.name as user, Users.phone, Users.spare_phone, Users.building, Users.floor, Users.street, Orders.city, Orders.created_at, Orders.total, Orders.delivered, Orders.processing, Orders.discount, Orders.method FROM `Orders` INNER JOIN Users ON Orders.user = Users.id";
       const inputs = [];
 
       if (search !== undefined && search !== "") {
@@ -185,6 +185,15 @@ module.exports = class Orders {
           resolve(row);
         }
       );
+    });
+  }
+
+  async getCities() {
+    return new Promise((resolve, reject) => {
+      db.all("SELECT city, value FROM `Delivery`", (err, rows) => {
+        if (err) reject(err);
+        resolve(rows);
+      });
     });
   }
 };

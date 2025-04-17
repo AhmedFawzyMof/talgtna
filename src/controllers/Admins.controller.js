@@ -7,6 +7,7 @@ const CategoryModel = require("../models/Categories.model");
 const CompanyModel = require("../models/Companies.model");
 const ContactModel = require("../models/Contacts.model");
 const OfferModel = require("../models/Offers.model");
+const crypto = require("crypto");
 const path = require("path");
 const jwt = require("jsonwebtoken");
 
@@ -89,7 +90,7 @@ const AdminEditProduct = async (req, res) => {
 const AdminDeleteProducts = async (req, res) => {
   try {
     const ids = req.body.ids;
-    console.log(ids);
+
     await ProductModel.delete(ids);
     res.status(200).json({ success: true });
   } catch (err) {
@@ -201,8 +202,11 @@ const AdminDeleteCompanies = async (req, res) => {
 const AdminEditCompanies = async (req, res) => {
   try {
     const company = req.body;
-    console.log(company);
     await new CompanyModel(company).edit();
+    await new ProductModel({
+      company: company.name,
+      soon: company.soon,
+    }).available();
     res.status(200).json({ success: true });
   } catch (err) {
     console.error(err);
@@ -332,13 +336,42 @@ const AdminReceipt = async (req, res) => {
   try {
     const id = req.params.id;
     const receipt = await new OrderModel({ id }).byId();
+    const cities = await new OrderModel().getCities();
 
     const ordersIds = [receipt.id];
     const products = await OrderProductsModel.adminOrderProducts(ordersIds);
 
     receipt.products = products;
 
-    res.status(200).json({ receipt: receipt });
+    res.status(200).json({ receipt: receipt, cities: cities });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Internal Server Error");
+  }
+};
+
+const AdminAdmins = async (req, res) => {
+  try {
+    const admins = await AdminModel.getAll();
+    res.json({ admins: admins });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Internal Server Error");
+  }
+};
+
+const AdminAddAdmins = async (req, res) => {
+  try {
+    const admin = req.body;
+
+    const hashedPassword = crypto
+      .createHash("sha256")
+      .update(admin.password)
+      .digest("hex");
+
+    Object.assign(admin, { password: hashedPassword });
+    await new AdminModel(admin).add();
+    res.status(200).json({ success: true });
   } catch (err) {
     console.error(err);
     res.status(500).send("Internal Server Error");
@@ -370,4 +403,6 @@ module.exports = {
   AdminEditContacts,
   AdminCounters,
   AdminReceipt,
+  AdminAdmins,
+  AdminAddAdmins,
 };

@@ -1,5 +1,5 @@
 const db = require("../config/database").db;
-// const { v4: uuid } = require("uuid");
+const { v4: uuid } = require("uuid");
 const crypto = require("crypto");
 const { getCurrentDay } = require("../utils/date");
 
@@ -63,6 +63,29 @@ ORDER BY month;`,
         (err, rows) => {
           if (err) reject(err);
           resolve(rows);
+        }
+      );
+    });
+  }
+
+  static async getAll() {
+    return new Promise((resolve, reject) => {
+      db.all("SELECT * FROM `Admins`", (err, rows) => {
+        if (err) reject(err);
+        resolve(rows);
+      });
+    });
+  }
+
+  async add() {
+    return new Promise((resolve, reject) => {
+      const id = uuid();
+      db.run(
+        "INSERT INTO `Admins` (`id`, `username`, `password`) VALUES (?, ?, ?)",
+        [id, this.admin.username, this.admin.password],
+        function (err) {
+          if (err) reject(err);
+          resolve({ success: true });
         }
       );
     });

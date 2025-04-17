@@ -1,5 +1,6 @@
 const Companies = require("../models/Companies.model");
 const Products = require("../models/Products.model");
+const Categories = require("../models/Categories.model");
 const UserId = require("../utils/getUserId");
 
 const CompanyByName = async (req, res) => {
@@ -13,9 +14,12 @@ const CompanyByName = async (req, res) => {
     }
 
     const name = req.params.name;
+    const category = req.query.category;
     const company = await new Companies({ name: name }).byName();
+    const categories = await Categories.getAll({ search: "" });
     const products = await new Products({
       company: company.name,
+      category: category,
       user: id,
     }).byCompany();
 
@@ -23,6 +27,7 @@ const CompanyByName = async (req, res) => {
       company: company,
       products: products.products,
       favorites: products.favorites,
+      categories: categories,
     });
   } catch (error) {
     console.error(error);

@@ -17,21 +17,14 @@ app.use(cookieParser());
 app.use(express.static("public"));
 app.use(cors(corsOptions));
 
-const indexRoutes = require("./routes/Index.route");
-const companyRoutes = require("./routes/Companies.route");
-const productRoutes = require("./routes/Products.route");
-const categoryRoutes = require("./routes/Categories.route");
-const orderRoutes = require("./routes/Orders.route");
-const userRoutes = require("./routes/Users.route");
-const adminRoutes = require("./routes/Admins.route");
-
-app.use("/talgtna/api", indexRoutes);
-app.use("/talgtna/api/company", companyRoutes);
-app.use("/talgtna/api/products", productRoutes);
-app.use("/talgtna/api/category", categoryRoutes);
-app.use("/talgtna/api/order", orderRoutes);
-app.use("/talgtna/api/user", userRoutes);
-app.use("/talgtna/api/admin", adminRoutes);
+app.use("/talgtna/api", require("./routes/Index.route"));
+app.use("/talgtna/api/company", require("./routes/Companies.route"));
+app.use("/talgtna/api/products", require("./routes/Products.route"));
+app.use("/talgtna/api/category", require("./routes/Categories.route"));
+app.use("/talgtna/api/order", require("./routes/Orders.route"));
+app.use("/talgtna/api/user", require("./routes/Users.route"));
+app.use("/talgtna/api/admin", require("./routes/Admins.route"));
+app.use("/talgtna/api/discount", require("./routes/Discount.route"));
 
 app.get("*", (req, res, next) => {
   if (req.path.includes("api")) {
