@@ -70,7 +70,11 @@ const AddOrder = async (req, res) => {
       }
     }
 
-    const { total, cart: processedCart } = await new OrderProducts({
+    const {
+      total,
+      totalCoinsSpent,
+      cart: processedCart,
+    } = await new OrderProducts({
       products: cart,
     }).total();
 
@@ -98,6 +102,11 @@ const AddOrder = async (req, res) => {
       id: userId,
       coins: total,
     }).addCoins();
+
+    await new Users({
+      id: userId,
+      coins_spent: totalCoinsSpent,
+    }).removeCoins();
 
     return res.json({
       token,

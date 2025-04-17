@@ -10,14 +10,20 @@ module.exports = class OrderProducts {
     return new Promise((resolve, reject) => {
       db.serialize(() => {
         const stmt = db.prepare(
-          "INSERT INTO `OrderProducts` (`product`, `order`, `quantity`, `price_at_order`) VALUES (?, ?, ?, ?)"
+          "INSERT INTO `OrderProducts` (`product`, `order`, `quantity`, `price_at_order`, with_coins) VALUES (?, ?, ?, ?, ?)"
         );
 
         for (let i = 0; i < orderproducts.products.length; i++) {
           const product = orderproducts.products[i];
 
           stmt.run(
-            [product.id, order, product.quantity, product.price],
+            [
+              product.id,
+              order,
+              product.quantity,
+              product.price,
+              product.with_coins,
+            ],
             function (err) {
               if (err) reject(err);
             }
@@ -34,7 +40,7 @@ module.exports = class OrderProducts {
   async getAll() {
     return new Promise((resolve, reject) => {
       db.all(
-        "SELECT OrderProducts.quantity, OrderProducts.`order`, Products.id, Products.name, Products.image, Products.price FROM OrderProducts INNER JOIN Products ON OrderProducts.product = Products.id WHERE OrderProducts.`order` = ?",
+        "SELECT OrderProducts.quantity, OrderProducts.`order`, OrderProducts.with_coins, Products.id, Products.name, Products.image, Products.price FROM OrderProducts INNER JOIN Products ON OrderProducts.product = Products.id WHERE OrderProducts.`order` = ?",
         [this.orderproducts.order],
         (err, rows) => {
           if (err) reject(err);
@@ -59,17 +65,24 @@ module.exports = class OrderProducts {
     });
 
     let total = 0;
+    let totalCoinsSpent = 0;
     const cart = [];
     for (let i = 0; i < this.orderproducts.products.length; i++) {
       cart.push({
         id: this.orderproducts.products[i].id,
         quantity: this.orderproducts.products[i].quantity,
         price: prices[i].price,
+        with_coins: this.orderproducts.products[i].with_coins,
       });
-      total += this.orderproducts.products[i].quantity * prices[i].price;
+      if (this.orderproducts.products[i].with_coins) {
+        totalCoinsSpent +=
+          this.orderproducts.products[i].quantity * prices[i].price;
+      } else {
+        total += this.orderproducts.products[i].quantity * prices[i].price;
+      }
     }
 
-    return { total, cart };
+    return { total, totalCoinsSpent, cart };
   }
 
   static async topProducts() {
@@ -86,7 +99,7 @@ module.exports = class OrderProducts {
 
   static async adminOrderProducts(ids) {
     return new Promise((resolve, reject) => {
-      const sql = `SELECT OrderProducts.\`order\`, OrderProducts.quantity, Products.name, OrderProducts.price_at_order FROM OrderProducts INNER JOIN Products ON OrderProducts.product = Products.id WHERE OrderProducts.\`order\` IN (${ids
+      const sql = `SELECT OrderProducts.\`order\`, OrderProducts.quantity, OrderProducts.with_coins, Products.name, OrderProducts.price_at_order FROM OrderProducts INNER JOIN Products ON OrderProducts.product = Products.id WHERE OrderProducts.\`order\` IN (${ids
         .map(() => "?")
         .join(",")})`;
       db.all(sql, ids, (err, rows) => {

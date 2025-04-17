@@ -23,8 +23,8 @@ if (!self.define) {
     if (s[l]) return;
     let t = {};
     const o = (e) => i(e, l),
-      f = { module: { uri: l }, exports: t, require: o };
-    s[l] = Promise.all(n.map((e) => f[e] || o(e))).then((e) => (r(...e), t));
+      d = { module: { uri: l }, exports: t, require: o };
+    s[l] = Promise.all(n.map((e) => d[e] || o(e))).then((e) => (r(...e), t));
   };
 }
 define(["./workbox-5ffe50d4"], function (e) {
@@ -33,23 +33,26 @@ define(["./workbox-5ffe50d4"], function (e) {
     e.clientsClaim(),
     e.precacheAndRoute(
       [
-        { url: "assets/index-BIasp25M.js", revision: null },
-        { url: "assets/index-BsJ3RGOz.css", revision: null },
-        { url: "assets/index-legacy-BNwXoMcF.js", revision: null },
-        { url: "assets/polyfills-legacy-B0mWexPD.js", revision: null },
-        { url: "index.html", revision: "03ec8cfe844d834af3118bd04f744d00" },
+        { url: "talgtna/assets/index-5mvvWGw8.css", revision: null },
+        { url: "talgtna/assets/index-DrEIi9Ki.js", revision: null },
+        { url: "talgtna/assets/index-legacy-jdQ8YuXp.js", revision: null },
+        { url: "talgtna/assets/polyfills-legacy-B0mWexPD.js", revision: null },
+        {
+          url: "talgtna/index.html",
+          revision: "6d8545b6c3448a89ed851a4863232550",
+        },
         { url: "registerSW.js", revision: "1872c500de691dce40960bb85481de07" },
-        { url: "192.png", revision: "b90248ae7fff8e979ff771bb6b294528" },
-        { url: "512.png", revision: "a53d1c19b89bab56f7366b496eebd65a" },
         {
           url: "manifest.webmanifest",
-          revision: "a553f5fc5834f504314cba98435fddaf",
+          revision: "dab643ef016a5f87d25ea8d63b726c69",
         },
       ],
       {}
     ),
     e.cleanupOutdatedCaches(),
     e.registerRoute(
-      new e.NavigationRoute(e.createHandlerBoundToURL("index.html"))
+      new e.NavigationRoute(
+        e.createHandlerBoundToURL("talgtna/frontend/index.html")
+      )
     );
 });

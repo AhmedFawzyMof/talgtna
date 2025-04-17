@@ -49,6 +49,19 @@ module.exports = class Users {
     return { id: user_id.id, favorites: user_favorites.favorites };
   }
 
+  async getCoins() {
+    return new Promise((resolve, reject) => {
+      db.get(
+        "SELECT coins FROM Users WHERE id = ?",
+        [this.user.id],
+        (err, row) => {
+          if (err) reject(err);
+          resolve(row);
+        }
+      );
+    });
+  }
+
   async cashback() {
     return new Promise((resolve, reject) => {
       db.get(
@@ -263,6 +276,19 @@ module.exports = class Users {
       db.run(
         "UPDATE Users SET `coins` = `coins` + ? WHERE id = ?",
         [this.user.coins, this.user.id],
+        (err) => {
+          if (err) reject(err);
+          resolve();
+        }
+      );
+    });
+  }
+
+  async removeCoins() {
+    return new Promise((resolve, reject) => {
+      db.run(
+        "UPDATE Users SET `coins` = `coins` - ? WHERE id = ?",
+        [this.user.coins_spent * 50, this.user.id],
         (err) => {
           if (err) reject(err);
           resolve();

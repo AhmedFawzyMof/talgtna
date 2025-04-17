@@ -14,6 +14,19 @@ module.exports = class Products {
     });
   }
 
+  static async coinstore() {
+    return new Promise((resolve, reject) => {
+      db.all(
+        "SELECT * FROM `Products` WHERE in_coin_store = 1 ORDER BY price ASC",
+        [],
+        (err, rows) => {
+          if (err) reject(err);
+          resolve(rows);
+        }
+      );
+    });
+  }
+
   async byCategory() {
     if (this.product.user) {
       this.product.favorites = await new Promise((resolve, reject) => {
@@ -199,16 +212,18 @@ module.exports = class Products {
     return { products, favorites };
   }
 
-  async byId() {
+  async byId({ coins = false }) {
     return new Promise((resolve, reject) => {
-      db.get(
-        "SELECT * FROM `Products` WHERE id = ? AND deleted = 0",
-        [this.product.id],
-        (err, row) => {
-          if (err) reject(err);
-          resolve(row);
-        }
-      );
+      let sql = "SELECT * FROM `Products` WHERE id = ? AND deleted = 0";
+
+      if (coins) {
+        sql += " AND in_coin_store = 1";
+      }
+
+      db.get(sql, [this.product.id], (err, row) => {
+        if (err) reject(err);
+        resolve(row);
+      });
     });
   }
 

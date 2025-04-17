@@ -86,8 +86,29 @@ const GetCoupons = async (req, res) => {
   }
 };
 
+const GetProductToOrder = async (req, res) => {
+  try {
+    const token = req.headers.authorization.split(" ")[1];
+    const product = req.params.product;
+
+    if (!token) {
+      res.status(500).send("Internal Server Error");
+      return;
+    }
+
+    const coins = await new Users({ id: UserId.UserId(token) }).getCoins();
+    const products = await new Products({ id: product }).byId({ coins: true });
+
+    res.json({ coins: coins.coins, product: products });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Internal Server Error");
+  }
+};
+
 module.exports = {
   AddToFav,
   GetFavorites,
   GetCoupons,
+  GetProductToOrder,
 };
