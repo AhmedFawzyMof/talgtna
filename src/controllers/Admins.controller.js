@@ -79,6 +79,10 @@ const AdminProducts = async (req, res) => {
 const AdminEditProduct = async (req, res) => {
   try {
     const product = req.body;
+    if (req.file) {
+      const image = `/img/product/${req.file.filename}`;
+      Object.assign(product, { image: image });
+    }
     await new ProductModel(product).edit();
     res.status(200).json({ success: true });
   } catch (err) {
@@ -378,6 +382,49 @@ const AdminAddAdmins = async (req, res) => {
   }
 };
 
+const AdminDelivery = async (req, res) => {
+  try {
+    const delivery = await AdminModel.getDelivery();
+    res.json({ delivery: delivery });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Internal Server Error");
+  }
+};
+
+const AdminEditDelivery = async (req, res) => {
+  try {
+    const delivery = req.body;
+    await new AdminModel({ ...delivery }).editDelivery();
+    res.status(200).json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Internal Server Error");
+  }
+};
+
+const AdminAddDelivery = async (req, res) => {
+  try {
+    const delivery = req.body;
+    await new AdminModel({ ...delivery }).addDelivery();
+    res.status(200).json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Internal Server Error");
+  }
+};
+
+const AdminDeleteDelivery = async (req, res) => {
+  try {
+    const id = req.params.id;
+    await new AdminModel({ id }).deleteDelivery();
+    res.status(200).json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Internal Server Error");
+  }
+};
+
 module.exports = {
   AdminLogin,
   AdminDashboard,
@@ -405,4 +452,8 @@ module.exports = {
   AdminReceipt,
   AdminAdmins,
   AdminAddAdmins,
+  AdminDelivery,
+  AdminEditDelivery,
+  AdminAddDelivery,
+  AdminDeleteDelivery,
 };

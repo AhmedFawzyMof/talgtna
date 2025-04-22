@@ -1,4 +1,5 @@
 const db = require("../config/database").db;
+const fs = require("fs");
 
 module.exports = class Products {
   constructor(product) {
@@ -69,9 +70,10 @@ module.exports = class Products {
       });
     }
     const products = await new Promise((resolve, reject) => {
+      const searchQuery = `%${this.product.query}%`;
       db.all(
-        "SELECT * FROM `Products` WHERE name LIKE ? AND deleted = 0 ORDER BY available DESC",
-        ["%" + this.product.query + "%"],
+        "SELECT * FROM `Products` WHERE name LIKE ? OR description LIKE ? OR company LIKE ? OR category LIKE ? AND deleted = 0 ORDER BY available DESC",
+        [searchQuery, searchQuery, searchQuery, searchQuery],
         (err, rows) => {
           if (err) reject(err);
           resolve(rows);
@@ -85,7 +87,7 @@ module.exports = class Products {
   async inFavorite({ userId }) {
     return new Promise((resolve, reject) => {
       db.get(
-        "SELECT * FROM `favourite` WHERE `user` = ? AND `deleted` = 0 AND `product` = ?",
+        "SELECT * FROM `favourite` WHERE `user` = ? AND `product` = ?",
         [userId, this.product.id],
         (err, row) => {
           if (err) reject(err);
@@ -151,13 +153,31 @@ module.exports = class Products {
   }
 
   async edit() {
+    if (this.product.image) {
+      const productImage = await new Promise((resolve, reject) => {
+        db.get(
+          "SELECT image FROM `Products` WHERE id = ?",
+          [this.product.id],
+          function (err, row) {
+            if (err) reject(err);
+            resolve(row);
+          }
+        );
+      });
+
+      const imagePath = `public/talgtna${productImage.image}`;
+      if (fs.existsSync(imagePath)) {
+        fs.unlink(imagePath, (err) => {
+          if (err) console.error(err);
+        });
+      }
+    }
     return new Promise((resolve, reject) => {
       const updates = Object.entries(this.product)
         .map(([key, value]) => `${key} = ?`)
         .join(", ");
       const values = Object.values(this.product);
       values.push(this.product.id);
-
       db.run(
         `UPDATE \`Products\` SET ${updates} WHERE \`id\` = ?`,
         values,
@@ -213,7 +233,19 @@ module.exports = class Products {
   }
 
   async byId({ coins = false }) {
-    return new Promise((resolve, reject) => {
+    if (this.product.user) {
+      this.product.favorites = await new Promise((resolve, reject) => {
+        db.get(
+          "SELECT favourite.product FROM `favourite` INNER JOIN Products ON favourite.product = Products.id WHERE favourite.`user` = ? AND Products.id = ?",
+          [this.product.user, this.product.id],
+          (err, rows) => {
+            if (err) reject(err);
+            resolve(rows);
+          }
+        );
+      });
+    }
+    const product = await new Promise((resolve, reject) => {
       let sql = "SELECT * FROM `Products` WHERE id = ? AND deleted = 0";
 
       if (coins) {
@@ -225,6 +257,8 @@ module.exports = class Products {
         resolve(row);
       });
     });
+
+    return { product, favorites: this.product.favorites };
   }
 
   static async adminProducts({ limit, search }) {
@@ -254,7 +288,7 @@ module.exports = class Products {
         inputs.push("%" + search + "%");
       }
 
-      sql += " LIMIT ? OFFSET ?";
+      sql += " ORDER BY company ASC LIMIT ? OFFSET ?";
 
       inputs.push(limit, OFFSET);
       db.all(sql, inputs, (err, rows) => {

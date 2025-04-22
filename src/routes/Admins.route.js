@@ -22,7 +22,7 @@ const storage = multer.diskStorage({
   filename: function (req, file, cb) {
     const ext = path.extname(file.originalname);
     let name = path.basename(file.originalname, ext);
-    if (req.url.includes("companies")) {
+    if (req.url.includes("companies") || req.url.includes("products")) {
       name = req.body.name;
     }
     cb(null, `${name}${ext}`);
@@ -35,7 +35,12 @@ router.post("/login", controller.AdminLogin);
 router.get("/dashboard", ValidateToken, controller.AdminDashboard);
 
 router.get("/products", ValidateToken, controller.AdminProducts);
-router.put("/products/:id", ValidateToken, controller.AdminEditProduct);
+router.put(
+  "/products/:id",
+  ValidateToken,
+  upload.single("image"),
+  controller.AdminEditProduct
+);
 router.put("/products", ValidateToken, controller.AdminDeleteProducts);
 router.post(
   "/products",
@@ -90,5 +95,10 @@ router.get("/admins", ValidateToken, controller.AdminAdmins);
 router.post("/admins", ValidateToken, controller.AdminAddAdmins);
 
 router.get("/receipt/:id", ValidateToken, controller.AdminReceipt);
+
+router.get("/delivery", ValidateToken, controller.AdminDelivery);
+router.put("/delivery/:id", ValidateToken, controller.AdminEditDelivery);
+router.post("/delivery", ValidateToken, controller.AdminAddDelivery);
+router.delete("/delivery/:id", ValidateToken, controller.AdminDeleteDelivery);
 
 module.exports = router;

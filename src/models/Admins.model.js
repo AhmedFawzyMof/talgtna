@@ -90,4 +90,52 @@ ORDER BY month;`,
       );
     });
   }
+
+  static async getDelivery() {
+    return new Promise((resolve, reject) => {
+      db.all("SELECT * FROM `Delivery`", (err, rows) => {
+        if (err) reject(err);
+        resolve(rows);
+      });
+    });
+  }
+
+  async editDelivery() {
+    return new Promise((resolve, reject) => {
+      db.run(
+        "UPDATE `Delivery` SET `value` = ?, `city` = ? WHERE `id` = ?",
+        [this.admin.value, this.admin.city, this.admin.id],
+        function (err) {
+          if (err) reject(err);
+          resolve({ success: true });
+        }
+      );
+    });
+  }
+
+  async deleteDelivery() {
+    return new Promise((resolve, reject) => {
+      db.run(
+        "DELETE FROM `Delivery` WHERE `id` = ?",
+        [this.admin.id],
+        function (err) {
+          if (err) reject(err);
+          resolve({ success: true });
+        }
+      );
+    });
+  }
+
+  async addDelivery() {
+    return new Promise((resolve, reject) => {
+      db.run(
+        "INSERT INTO `Delivery` (`city`, `value`) VALUES (?, ?)",
+        [this.admin.city, this.admin.value],
+        function (err) {
+          if (err) reject(err);
+          resolve({ success: true });
+        }
+      );
+    });
+  }
 };

@@ -6,7 +6,7 @@
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#ffffff",
-  "lang": "en",
+  "lang": "ar",
   "scope": "/",
   "icons": [
     { "src": "/talgtna/img/192.png", "sizes": "192x192", "type": "image/png" },

@@ -6,8 +6,35 @@ const UserId = require("../utils/getUserId");
 const ProductById = async (req, res) => {
   try {
     const id = parseInt(req.params.id);
-    const product = await new Products({ id }).byId({ coins: false });
-    res.json({ product: product });
+    let coin_store = false;
+    let redirect = false;
+    let user = null;
+
+    if (req.headers.authorization) {
+      user = UserId.UserId(req.headers.authorization.split(" ")[1]);
+    }
+
+    if (req.query.coin_store) {
+      coin_store = JSON.parse(req.query.coin_store);
+    }
+
+    console.log(user);
+
+    const product = await new Products({ id, user }).byId({
+      coins: coin_store,
+    });
+
+    if (!product) {
+      redirect = true;
+    }
+
+    console.log(product);
+
+    res.json({
+      product: product.product,
+      favorites: product.favorites ? true : false,
+      redirect: redirect,
+    });
   } catch (err) {
     console.error(err);
     res.status(500).send("Internal Server Error");
