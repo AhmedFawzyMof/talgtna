@@ -152,7 +152,7 @@ const AdminUsers = async (req, res) => {
 const AdminAddProducts = async (req, res) => {
   try {
     const product = req.body;
-    const image = `/img/product/${req.file.originalname}`;
+    const image = `/img/product/${req.file.filename}`;
 
     Object.assign(product, { image });
 

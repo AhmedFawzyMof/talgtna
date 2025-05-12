@@ -279,6 +279,7 @@ module.exports = class Products {
       });
     });
     const OFFSET = limit - 50;
+
     const products = await new Promise((resolve, reject) => {
       let sql = "SELECT * FROM `Products` WHERE deleted = 0";
       const inputs = [];
@@ -290,7 +291,7 @@ module.exports = class Products {
 
       sql += " ORDER BY company ASC LIMIT ? OFFSET ?";
 
-      inputs.push(limit, OFFSET);
+      inputs.push(50, OFFSET);
       db.all(sql, inputs, (err, rows) => {
         if (err) reject(err);
         resolve(rows);

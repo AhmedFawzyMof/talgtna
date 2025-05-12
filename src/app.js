@@ -27,6 +27,9 @@ app.use("/talgtna/api/admin", require("./routes/Admins.route"));
 app.use("/talgtna/api/discount", require("./routes/Discount.route"));
 
 app.get("*", (req, res, next) => {
+  const userIp = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
+  console.error(userIp);
+
   if (req.path.includes("api")) {
     return next();
   }
