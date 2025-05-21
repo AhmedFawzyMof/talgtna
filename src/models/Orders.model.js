@@ -53,7 +53,7 @@ module.exports = class Orders {
   async getAll() {
     return new Promise((resolve, reject) => {
       db.all(
-        "SELECT Orders.id, Orders.created_at, Orders.method, Orders.discount, Orders.delivered, Orders.total, Orders.processing, Orders.city FROM `Orders` WHERE Orders.user = ?",
+        "SELECT Orders.id, Orders.created_at, Orders.method, Orders.discount, Orders.delivered, Orders.total, Orders.processing, Orders.city FROM `Orders` WHERE Orders.user = ? LIMIT 15",
         [this.order.user],
         (err, rows) => {
           if (err) reject(err);
@@ -190,10 +190,26 @@ module.exports = class Orders {
 
   async getCities() {
     return new Promise((resolve, reject) => {
-      db.all("SELECT city, value FROM `Delivery`", (err, rows) => {
-        if (err) reject(err);
-        resolve(rows);
-      });
+      db.all(
+        "SELECT city, value FROM `Delivery` WHERE hidden = 0",
+        (err, rows) => {
+          if (err) reject(err);
+          resolve(rows);
+        }
+      );
+    });
+  }
+
+  async cancel() {
+    return new Promise((resolve, reject) => {
+      db.run(
+        `DELETE FROM Orders WHERE id = ? AND user = ?`,
+        [this.order.id, this.order.user],
+        (err) => {
+          if (err) reject(err);
+          resolve({ success: true });
+        }
+      );
     });
   }
 };

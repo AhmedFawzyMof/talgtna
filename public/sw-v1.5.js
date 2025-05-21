@@ -1,3 +1,11 @@
+self.addEventListener("activate", (event) => {
+  event.waitUntil(
+    caches
+      .keys()
+      .then((keys) => Promise.all(keys.map((key) => caches.delete(key))))
+  );
+});
+
 if (!self.define) {
   let e,
     s = {};
@@ -15,35 +23,35 @@ if (!self.define) {
         return e;
       })
   );
-  self.define = (i, t) => {
-    const r =
+  self.define = (i, r) => {
+    const t =
       e ||
       ("document" in self ? document.currentScript.src : "") ||
       location.href;
-    if (s[r]) return;
+    if (s[t]) return;
     let l = {};
-    const o = (e) => n(e, r),
-      c = { module: { uri: r }, exports: l, require: o };
-    s[r] = Promise.all(i.map((e) => c[e] || o(e))).then((e) => (t(...e), l));
+    const c = (e) => n(e, t),
+      o = { module: { uri: t }, exports: l, require: c };
+    s[t] = Promise.all(i.map((e) => o[e] || c(e))).then((e) => (r(...e), l));
   };
 }
 define(["./workbox-f79ddba6"], function (e) {
   "use strict";
   e.enable(),
-    e.setCacheNameDetails({ prefix: "talgtna-1.5" }),
+    e.setCacheNameDetails({ prefix: "Talagtna-1.5" }),
     self.skipWaiting(),
     e.clientsClaim(),
     e.precacheAndRoute(
       [
-        { url: "assets/index-4InYS1hV.css", revision: null },
-        { url: "assets/index-CYeWpjue.js", revision: null },
-        { url: "assets/index-legacy-jPmnULNj.js", revision: null },
+        { url: "assets/index-BA8Em14j.css", revision: null },
+        { url: "assets/index-legacy-CfP6_Azy.js", revision: null },
+        { url: "assets/index-S2hM1jrY.js", revision: null },
         { url: "assets/polyfills-legacy-B0mWexPD.js", revision: null },
-        { url: "index.html", revision: "1f309504ed5498cb4f3f6ed37128876e" },
+        { url: "index.html", revision: "4ee14db182395e1ca1c9b0a828ce0574" },
         { url: "registerSW.js", revision: "869e341444e428dfb09681cac92b09f8" },
         {
           url: "manifest.webmanifest",
-          revision: "0d6fa79e2d7f1ab3c35ab9101436e2b1",
+          revision: "3a6fbf3e6a152e9e8e07c21cf3493563",
         },
       ],
       {}
@@ -65,7 +73,7 @@ define(["./workbox-f79ddba6"], function (e) {
     e.registerRoute(
       /\.(?:js|css|png|jpg|jpeg|svg|gif|ico)$/,
       new e.StaleWhileRevalidate({
-        cacheName: "assets-cache-1746976776785",
+        cacheName: "assets-cache-1747210144913",
         plugins: [
           new e.ExpirationPlugin({ maxEntries: 100, maxAgeSeconds: 259200 }),
         ],

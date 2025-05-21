@@ -113,6 +113,19 @@ ORDER BY month;`,
     });
   }
 
+  async hideDelivery() {
+    return new Promise((resolve, reject) => {
+      db.run(
+        "UPDATE `Delivery` SET `hidden` = ? WHERE `id` = ?",
+        [!this.admin.hidden, this.admin.id],
+        function (err) {
+          if (err) reject(err);
+          resolve({ success: true });
+        }
+      );
+    });
+  }
+
   async deleteDelivery() {
     return new Promise((resolve, reject) => {
       db.run(

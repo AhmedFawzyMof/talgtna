@@ -97,6 +97,7 @@ router.post("/admins", ValidateToken, controller.AdminAddAdmins);
 router.get("/receipt/:id", ValidateToken, controller.AdminReceipt);
 
 router.get("/delivery", ValidateToken, controller.AdminDelivery);
+router.put("/delivery", ValidateToken, controller.AdminEditHideCity);
 router.put("/delivery/:id", ValidateToken, controller.AdminEditDelivery);
 router.post("/delivery", ValidateToken, controller.AdminAddDelivery);
 router.delete("/delivery/:id", ValidateToken, controller.AdminDeleteDelivery);

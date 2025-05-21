@@ -392,6 +392,18 @@ const AdminDelivery = async (req, res) => {
   }
 };
 
+const AdminEditHideCity = async (req, res) => {
+  try {
+    const { id, hide } = req.body;
+    console.log(id, hide);
+    await new AdminModel({ hidden: hide, id }).hideDelivery();
+    res.status(200).json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Internal Server Error");
+  }
+};
+
 const AdminEditDelivery = async (req, res) => {
   try {
     const delivery = req.body;
@@ -456,4 +468,5 @@ module.exports = {
   AdminEditDelivery,
   AdminAddDelivery,
   AdminDeleteDelivery,
+  AdminEditHideCity,
 };

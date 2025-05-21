@@ -10,15 +10,13 @@ const ProductById = async (req, res) => {
     let redirect = false;
     let user = null;
 
-    if (req.headers.authorization) {
+    if (req.headers.authorization.split(" ")[1]) {
       user = UserId.UserId(req.headers.authorization.split(" ")[1]);
     }
 
     if (req.query.coin_store) {
       coin_store = JSON.parse(req.query.coin_store);
     }
-
-    console.log(user);
 
     const product = await new Products({ id, user }).byId({
       coins: coin_store,
@@ -27,8 +25,6 @@ const ProductById = async (req, res) => {
     if (!product) {
       redirect = true;
     }
-
-    console.log(product);
 
     res.json({
       product: product.product,

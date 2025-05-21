@@ -150,7 +150,29 @@ const GetOrders = async (req, res) => {
   }
 };
 
+const CancelOrder = async (req, res) => {
+  try {
+    const token = req.headers.authorization.split(" ")[1];
+
+    if (!token) {
+      res.status(403).send("Forbidden Access");
+      return;
+    }
+
+    const orderId = req.params.id;
+    const user = Userid.UserId(token);
+
+    await new Orders({ id: orderId, user: user }).cancel();
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Internal Server Error");
+  }
+};
+
 module.exports = {
   AddOrder,
   GetOrders,
+  CancelOrder,
 };
