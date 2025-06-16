@@ -395,7 +395,7 @@ const AdminDelivery = async (req, res) => {
 const AdminEditHideCity = async (req, res) => {
   try {
     const { id, hide } = req.body;
-    console.log(id, hide);
+
     await new AdminModel({ hidden: hide, id }).hideDelivery();
     res.status(200).json({ success: true });
   } catch (err) {

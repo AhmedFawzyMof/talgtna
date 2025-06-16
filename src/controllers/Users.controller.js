@@ -1,6 +1,7 @@
 const Users = require("../models/Users.model");
 const Products = require("../models/Products.model");
 const UserId = require("../utils/getUserId");
+const jwt = require("jsonwebtoken");
 
 const AddToFav = async (req, res) => {
   try {
@@ -106,9 +107,68 @@ const GetProductToOrder = async (req, res) => {
   }
 };
 
+const GetUserData = async (req, res) => {
+  try {
+    const token = req.headers.authorization.split(" ")[1];
+    const user = await new Users({ id: UserId.UserId(token) }).getUser();
+    res.json({ user: user });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Internal Server Error");
+  }
+};
+
+const CreateUser = async (req, res) => {
+  try {
+    const body = req.body;
+
+    const token = req.headers.authorization.split(" ")[1];
+    if (token) {
+      const user = await new Users({
+        id: UserId.UserId(token),
+        street: body.street,
+        building: body.building,
+        floor: body.floor,
+        city: body.city,
+      }).update();
+
+      console.log(user);
+
+      res.json({
+        success: true,
+        token: jwt.sign({ id: UserId.UserId(token) }, process.env.SECRET_KEY),
+        favorites: user.favorites,
+      });
+      return;
+    }
+
+    const user = await new Users({
+      name: body.name,
+      phone: body.phone,
+      spare_phone: body.spare_phone,
+      street: body.street,
+      building: body.building,
+      floor: body.floor,
+      city: body.city,
+    }).add();
+    console.log(user);
+
+    res.json({
+      success: true,
+      token: jwt.sign({ id: user.id }, process.env.SECRET_KEY),
+      favorites: user.favorites,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Internal Server Error");
+  }
+};
+
 module.exports = {
   AddToFav,
   GetFavorites,
   GetCoupons,
   GetProductToOrder,
+  GetUserData,
+  CreateUser,
 };

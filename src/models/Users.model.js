@@ -152,16 +152,33 @@ module.exports = class Users {
   }
 
   async update() {
-    return new Promise((resolve, reject) => {
+    const update = await new Promise((resolve, reject) => {
       db.run(
-        "UPDATE Users SET `street` = ?, `building` = ?, `floor` = ? WHERE id = ?",
-        [this.user.street, this.user.building, this.user.floor, this.user.id],
+        "UPDATE Users SET `street` = ?, `building` = ?, `floor` = ?, `city` = ? WHERE id = ?",
+        [
+          this.user.street,
+          this.user.building,
+          this.user.floor,
+          this.user.city,
+          this.user.id,
+        ],
         function (err) {
           if (err) reject(err);
           resolve({ success: true });
         }
       );
     });
+    const user_favorites = await new Promise((resolve, reject) => {
+      db.get(
+        "SELECT COUNT(product) as favorites FROM favourite WHERE user = ?",
+        [this.user.id],
+        function (err, row) {
+          if (err) reject(err);
+          resolve(row);
+        }
+      );
+    });
+    return { success: true, favorites: user_favorites.favorites };
   }
 
   async updateCoupons() {
@@ -294,6 +311,15 @@ module.exports = class Users {
           resolve();
         }
       );
+    });
+  }
+
+  async getUser() {
+    return new Promise((resolve, reject) => {
+      db.get("SELECT * FROM Users WHERE id = ?", [this.user.id], (err, row) => {
+        if (err) reject(err);
+        resolve(row);
+      });
     });
   }
 };

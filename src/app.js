@@ -4,10 +4,17 @@ const cors = require("cors");
 const path = require("path");
 const app = express();
 const port = process.env.PORT || 3000;
+
 require("dotenv").config();
+
 const corsOptions = {
-  origin: "*",
+  origin: [
+    "http://localhost:5173",
+    "http://localhost:5174",
+    "https://talgtna.techno-pro.site",
+  ],
   optionsSuccessStatus: 200,
+  credentials: true,
 };
 
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
@@ -27,18 +34,24 @@ app.use("/talgtna/api/admin", require("./routes/Admins.route"));
 app.use("/talgtna/api/discount", require("./routes/Discount.route"));
 
 app.get("*", (req, res, next) => {
-  const userIp = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
-  console.error(userIp);
-
   if (req.path.includes("api")) {
     return next();
   }
 
   if (req.path.startsWith("/admin")) {
     return res.sendFile(path.resolve(__dirname, "..", "public", "admin.html"));
-  } else {
-    res.sendFile(
-      path.resolve(__dirname, "..", "public/talgtna/frontend", "index.html")
+  }
+
+  if (req.path.startsWith("/")) {
+    return res.sendFile(
+      path.resolve(
+        __dirname,
+        "..",
+        "public",
+        "talgtna",
+        "frontend",
+        "index.html"
+      )
     );
   }
 });

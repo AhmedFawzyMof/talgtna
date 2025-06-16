@@ -51,7 +51,7 @@ module.exports = class OrderProducts {
   }
 
   async total() {
-    const sql = `SELECT price from Products WHERE id IN (${this.orderproducts.products
+    const sql = `SELECT price, description, name from Products WHERE id IN (${this.orderproducts.products
       .map(() => "?")
       .join(",")})`;
 
@@ -70,8 +70,10 @@ module.exports = class OrderProducts {
     for (let i = 0; i < this.orderproducts.products.length; i++) {
       cart.push({
         id: this.orderproducts.products[i].id,
+        name: prices[i].name,
         quantity: this.orderproducts.products[i].quantity,
         price: prices[i].price,
+        description: prices[i].description,
         with_coins: this.orderproducts.products[i].with_coins,
       });
       if (this.orderproducts.products[i].with_coins) {
