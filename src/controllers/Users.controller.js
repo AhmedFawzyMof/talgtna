@@ -47,6 +47,43 @@ const AddToFav = async (req, res) => {
   }
 };
 
+const RemoveFromFav = async (req, res) => {
+  try {
+    const { product_id } = req.body;
+
+    const user = req.headers.authorization.split(" ")[1];
+
+    if (!user) {
+      res.status(500).send("Internal Server Error");
+      return;
+    }
+    const id = UserId.UserId(user);
+
+    const isRegister = await new Users({ id: id }).byId();
+
+    if (!isRegister) {
+      res.status(403).send("Forbidden Access");
+      return;
+    }
+
+    const removeFromFav = await new Products({ id: product_id }).removeFavorite(
+      {
+        userId: id,
+      }
+    );
+
+    if (!removeFromFav.success) {
+      res.status(500).send("Internal Server Error");
+      return;
+    }
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Internal Server Error");
+  }
+};
+
 const GetFavorites = async (req, res) => {
   try {
     const token = req.headers.authorization.split(" ")[1];
@@ -171,4 +208,5 @@ module.exports = {
   GetProductToOrder,
   GetUserData,
   CreateUser,
+  RemoveFromFav,
 };

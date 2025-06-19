@@ -97,6 +97,19 @@ module.exports = class Products {
     });
   }
 
+  removeFavorite({ userId }) {
+    return new Promise((resolve, reject) => {
+      db.run(
+        "DELETE FROM `favourite` WHERE `user` = ? AND `product` = ?",
+        [userId, this.product.id],
+        (err) => {
+          if (err) reject(err);
+          resolve({ success: true });
+        }
+      );
+    });
+  }
+
   async byCompany() {
     if (this.product.user) {
       this.product.favorites = await new Promise((resolve, reject) => {

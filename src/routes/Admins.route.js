@@ -21,9 +21,12 @@ const storage = multer.diskStorage({
   },
   filename: function (req, file, cb) {
     const ext = path.extname(file.originalname);
-    let name = path.basename(file.originalname, ext);
+    let name = "";
     if (req.url.includes("companies") || req.url.includes("products")) {
       name = req.body.name;
+    }
+    if (req.url.includes("products")) {
+      name = req.params.id;
     }
     cb(null, `${name}${ext}`);
   },

@@ -2,7 +2,6 @@ const Users = require("../models/Users.model");
 const Orders = require("../models/Orders.model");
 const OrderProducts = require("../models/OrderProducts.model");
 const Discount = require("../models/Discount.model");
-const fs = require("fs");
 const Userid = require("../utils/getUserId");
 const axios = require("axios");
 const { getCurrentDay } = require("../utils/date");
@@ -82,6 +81,7 @@ const CompleteOrder = async (req, res) => {
   try {
     const token = req.headers.authorization.split(" ")[1];
     const body = req.body;
+    const id = body.id;
 
     if (!token) {
       res.status(403).json({
@@ -90,12 +90,11 @@ const CompleteOrder = async (req, res) => {
       });
       return;
     }
+
     const orderDetailsCookie = req.cookies.order_ditails;
 
     const orderDetails = jwt.decode(orderDetailsCookie.token);
-    const reqId = parseInt(body.id);
 
-    console.log(orderDetails);
     let usedDiscount;
 
     if (orderDetails.discount.code != "") {
@@ -120,7 +119,7 @@ const CompleteOrder = async (req, res) => {
 
     const order = await new Orders({
       order: {
-        id: reqId,
+        id: id,
         user: orderDetails.user,
         method: orderDetails.method,
         discount: orderDetails.discount,
@@ -129,7 +128,7 @@ const CompleteOrder = async (req, res) => {
         city: orderDetails.city,
         created_at: getCurrentDay(),
         total,
-        paymob_paid: JSON.parse(body.success),
+        paymob_paid: true,
       },
     }).add();
 
@@ -149,6 +148,7 @@ const CompleteOrder = async (req, res) => {
       id: orderDetails.user,
       coins_spent: totalCoinsSpent,
     }).removeCoins();
+
     res.json({ success: true, message: "لقد تم تقديم طلبك بنجاح" });
   } catch (err) {
     console.error(err);
@@ -206,33 +206,114 @@ const CancelOrder = async (req, res) => {
 
 const GetPaymentLink = async (req, res) => {
   try {
-    console.log("hi");
+    const token = req.headers.authorization.split(" ")[1];
 
-    axios
-      .get("https://app.fawaterk.com/api/v2/getPaymentmethods", {
+    if (!token) {
+      res.status(403).json({
+        success: false,
+        message: "Please Fill order data to complete order",
+      });
+      return;
+    }
+    const userData = Userid.UserId(token);
+
+    const body = req.body;
+
+    const { total, cart: processedCart } = await new OrderProducts({
+      products: body.cart,
+    }).total();
+
+    const payloadCart = processedCart.map((item) => ({
+      name: item.name,
+      price: item.price,
+      quantity: item.quantity,
+    }));
+    const totalCart = total + body.dilivery - body.discount.value;
+    const payload = {
+      payment_method_id: 2,
+      currency: "EGP",
+      cartTotal: totalCart,
+      customer: {
+        first_name: body.name,
+        last_name: body.name,
+        email: "ezweb2024@gmail.com",
+        phone: body.phone,
+      },
+      cartItems: [
+        ...payloadCart,
+        {
+          name: "delivery",
+          price: body.dilivery,
+          quantity: 1,
+        },
+        {
+          name: "discount",
+          price: -body.discount.value,
+          quantity: 1,
+        },
+      ],
+      redirectionUrls: {
+        successUrl: "https://talgtna.techno-pro.site/ordersuccess/payment",
+        failUrl: "https://talgtna.techno-pro.site/ordersuccess/payment",
+        pendingUrl: "https://app.fawaterk.com/pending",
+      },
+    };
+
+    const response = await axios.post(
+      "https://app.fawaterk.com/api/v2/invoiceInitPay",
+      payload,
+      {
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer 8ea068023fbd08af92e9d4b2e97266fd0366fc50caad7dccfe`,
+          Authorization: `Bearer ${process.env.FAWATERK_API_KEY}`,
         },
-      })
-      .then((response) => {
-        console.log(response.data);
-      })
-      .catch((err) => {
-        console.log(err);
-      });
+      }
+    );
 
-    res.json({ link: "" });
+    const orderDitails = {
+      method: "fawaterk",
+      user: userData,
+      discount: req.body.discount,
+      cart: req.body.cart,
+      dilivery: req.body.dilivery,
+      city: req.body.city,
+    };
+
+    const data = jwt.sign(orderDitails, process.env.SECRET_KEY);
+
+    res.cookie("order_ditails", { token: data }, { maxAge: 3600000 * 24 });
+
+    res.json({ link: response.data.data.payment_data.redirectTo });
   } catch (err) {
-    console.error(err);
+    console.error(err.response.data.message);
     res.status(500).send("Internal Server Error");
   }
 };
 
-const PaymobResponse = async (req, res) => {
-  fs.writeFileSync("params.json", JSON.stringify(req.params));
-  fs.writeFileSync("body.json", JSON.stringify(req.body));
-  res.json({ status: 200, message: "ok" });
+const PaymentResponse = async (req, res) => {
+  try {
+    const token = req.headers.authorization.split(" ")[1];
+    const body = req.body;
+    if (!token) {
+      res.status(403).send("Forbidden Access");
+      return;
+    }
+
+    const orderStatus = await axios.get(
+      `https://app.fawaterk.com/api/v2/getInvoiceData/${body.id}`,
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.FAWATERK_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    res.json({ success: orderStatus.data.status });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Internal Server Error");
+  }
 };
 
 module.exports = {
@@ -240,6 +321,6 @@ module.exports = {
   GetOrders,
   CancelOrder,
   GetPaymentLink,
-  PaymobResponse,
+  PaymentResponse,
   CompleteOrder,
 };

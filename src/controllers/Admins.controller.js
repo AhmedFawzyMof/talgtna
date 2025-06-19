@@ -79,8 +79,11 @@ const AdminProducts = async (req, res) => {
 const AdminEditProduct = async (req, res) => {
   try {
     const product = req.body;
+
     if (req.file) {
-      const image = `/img/product/${req.file.filename}`;
+      const image = `/img/product/${product.id}${path.extname(
+        req.file.originalname
+      )}`;
       Object.assign(product, { image: image });
     }
     await new ProductModel(product).edit();
