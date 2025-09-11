@@ -24,6 +24,7 @@ module.exports = class Users {
   }
 
   async byId() {
+    console.log(this.user.id);
     const user_id = await new Promise((resolve, reject) => {
       db.get(
         "SELECT id FROM `Users` WHERE id = ?",
@@ -36,6 +37,7 @@ module.exports = class Users {
     });
 
     const user_favorites = await new Promise((resolve, reject) => {
+      console.log(user_id);
       db.get(
         "SELECT COUNT(product) as favorites FROM favourite WHERE user = ?",
         [user_id.id],

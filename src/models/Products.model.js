@@ -275,6 +275,8 @@ module.exports = class Products {
   }
 
   static async adminProducts({ limit, search }) {
+    let OFFSET = limit - 50;
+
     const totalProducts = await new Promise((resolve, reject) => {
       let sql = "SELECT COUNT(*) as total FROM `Products`";
       const inputs = [];
@@ -291,15 +293,16 @@ module.exports = class Products {
         resolve(row);
       });
     });
-    const OFFSET = limit - 50;
 
+    console.log(OFFSET, search);
     const products = await new Promise((resolve, reject) => {
       let sql = "SELECT * FROM `Products` WHERE deleted = 0";
       const inputs = [];
 
       if (search !== undefined && search !== "") {
-        sql += " AND name LIKE ?";
-        inputs.push("%" + search + "%");
+        sql += " AND name LIKE ? OR company LIKE ?";
+        OFFSET = 0;
+        inputs.push("%" + search + "%", "%" + search + "%");
       }
 
       sql += " ORDER BY company ASC LIMIT ? OFFSET ?";

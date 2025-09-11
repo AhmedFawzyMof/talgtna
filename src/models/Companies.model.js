@@ -11,7 +11,7 @@ module.exports = class Companies {
       const inputs = [];
 
       if (search !== undefined && search !== "") {
-        sql += "SELECT * FROM `Companies` WHERE name LIKE ?";
+        sql = "SELECT * FROM `Companies` WHERE name LIKE ?";
         inputs.push("%" + search + "%");
       }
 
@@ -50,13 +50,34 @@ module.exports = class Companies {
 
   static async delete({ ids }) {
     return new Promise((resolve, reject) => {
-      const sql = `DELETE FROM Companies WHERE id IN (${ids
+      const selectSql = `SELECT image FROM Companies WHERE id IN (${ids
         .map(() => "?")
         .join(",")})`;
 
-      db.run(sql, ids, (err) => {
-        if (err) reject(err);
-        else resolve({ success: true });
+      db.all(selectSql, ids, (err, rows) => {
+        if (err) return reject(err);
+
+        for (const row of rows) {
+          const imagePath = row.image;
+          if (imagePath) {
+            const fullPath = path.join("uploads/companies", imagePath); // adjust folder path as needed
+            fs.unlink(fullPath, (unlinkErr) => {
+              if (unlinkErr && unlinkErr.code !== "ENOENT") {
+                console.error(`Error deleting file ${fullPath}:`, unlinkErr);
+              }
+            });
+          }
+        }
+
+        // 3. Delete companies from DB
+        const deleteSql = `DELETE FROM Companies WHERE id IN (${ids
+          .map(() => "?")
+          .join(",")})`;
+
+        db.run(deleteSql, ids, (deleteErr) => {
+          if (deleteErr) reject(deleteErr);
+          else resolve({ success: true });
+        });
       });
     });
   }

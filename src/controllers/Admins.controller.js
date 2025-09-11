@@ -62,6 +62,7 @@ const AdminProducts = async (req, res) => {
   try {
     const limit = parseInt(req.query.limit);
     const search = req.query.search;
+
     const { totalProducts, products } = await ProductModel.adminProducts({
       limit,
       search,
@@ -155,7 +156,9 @@ const AdminUsers = async (req, res) => {
 const AdminAddProducts = async (req, res) => {
   try {
     const product = req.body;
-    const image = `/img/product/${req.file.filename}`;
+    const image = `/img/product/${req.body.id}${path.extname(
+      req.file.originalname
+    )}`;
 
     Object.assign(product, { image });
 
@@ -198,7 +201,7 @@ const AdminAddCompanies = async (req, res) => {
 const AdminDeleteCompanies = async (req, res) => {
   try {
     const ids = req.body.ids;
-    await CompanyModel.delete(ids);
+    await CompanyModel.delete({ ids });
     res.status(200).json({ success: true });
   } catch (err) {
     console.error(err);
@@ -301,7 +304,9 @@ const AdminOffers = async (req, res) => {
 const AdminAddOffers = async (req, res) => {
   try {
     const offer = req.body;
-    const image = `/img/offer/${req.file.originalname}`;
+    const image = `/img/offer/${offer.company}${path.extname(
+      req.file.originalname
+    )}`;
 
     Object.assign(offer, { image });
     await new OfferModel(offer).add();

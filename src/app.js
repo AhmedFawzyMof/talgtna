@@ -38,10 +38,6 @@ app.get("*", (req, res, next) => {
     return next();
   }
 
-  if (req.path.startsWith("/admin")) {
-    return res.sendFile(path.resolve(__dirname, "..", "public", "admin.html"));
-  }
-
   if (req.path.startsWith("/")) {
     return res.sendFile(
       path.resolve(
