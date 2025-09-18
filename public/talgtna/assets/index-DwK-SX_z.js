@@ -66971,7 +66971,7 @@ function K2e() {
             children: [
               "© ",
               new Date().getFullYear(),
-              " جميع الحقوق محفوظة | تطبيق الأطعمة المجمدة",
+              " جميع الحقوق محفوظة | Talagtna",
             ],
           }),
           d.jsxs("div", {

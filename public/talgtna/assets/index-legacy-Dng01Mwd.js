@@ -67387,7 +67387,7 @@ System.register([], function (e, t) {
                   children: [
                     "© ",
                     new Date().getFullYear(),
-                    " جميع الحقوق محفوظة | تطبيق الأطعمة المجمدة",
+                    " جميع الحقوق محفوظة | Talagtna",
                   ],
                 }),
                 J.jsxs("div", {
