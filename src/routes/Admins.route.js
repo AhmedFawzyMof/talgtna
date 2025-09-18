@@ -108,4 +108,9 @@ router.put("/delivery/:id", ValidateToken, controller.AdminEditDelivery);
 router.post("/delivery", ValidateToken, controller.AdminAddDelivery);
 router.delete("/delivery/:id", ValidateToken, controller.AdminDeleteDelivery);
 
+router.get("/coupons", ValidateToken, controller.AdminCoupons);
+router.post("/coupons", ValidateToken, controller.AdminAddCoupons);
+router.delete("/coupons", ValidateToken, controller.AdminDeleteCoupons);
+router.put("/coupons/:code", ValidateToken, controller.AdminEditCoupons);
+
 module.exports = router;

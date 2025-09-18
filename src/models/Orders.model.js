@@ -145,7 +145,7 @@ module.exports = class Orders {
     const OFFSET = limit - 50;
     const orders = await new Promise((resolve, reject) => {
       let sql =
-        "SELECT Orders.id, Users.name as user, Users.phone, Users.spare_phone, Users.building, Users.floor, Users.street, Orders.city, Orders.created_at, Orders.total, Orders.delivered, Orders.processing, Orders.discount, Orders.paymob_paid, Orders.method FROM `Orders` INNER JOIN Users ON Orders.user = Users.id";
+        "SELECT Orders.id, Users.name as user, Users.id as user_id, Users.phone, Users.spare_phone, Users.building, Users.floor, Users.street, Orders.city, Orders.created_at, Orders.total, Orders.delivered, Orders.processing, Orders.discount, Orders.paymob_paid, Orders.method FROM `Orders` INNER JOIN Users ON Orders.user = Users.id";
       const inputs = [];
 
       if (search !== undefined && search !== "") {

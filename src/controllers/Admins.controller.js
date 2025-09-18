@@ -7,6 +7,7 @@ const CategoryModel = require("../models/Categories.model");
 const CompanyModel = require("../models/Companies.model");
 const ContactModel = require("../models/Contacts.model");
 const OfferModel = require("../models/Offers.model");
+const DiscountModel = require("../models/Discount.model");
 const crypto = require("crypto");
 const path = require("path");
 const jwt = require("jsonwebtoken");
@@ -133,6 +134,21 @@ const AdminEditOrders = async (req, res) => {
   try {
     const order = req.body;
     await new OrderModel(order).edit();
+
+    if (order.delivered) {
+      const products = await new OrderProductsModel({
+        order: order.id,
+      }).getAll();
+      const { total } = await new OrderProductsModel({
+        products: products,
+      }).total();
+
+      const userData = await new UserModel({ id: order.user }).byId();
+      await new UserModel({
+        id: userData.id,
+        coins: total,
+      }).addCoins();
+    }
     res.status(200).json({ success: true });
   } catch (err) {
     console.error(err);
@@ -445,8 +461,56 @@ const AdminDeleteDelivery = async (req, res) => {
   }
 };
 
+const AdminCoupons = async (req, res) => {
+  try {
+    const search = req.query.search;
+    const coupons = await DiscountModel.readAll({ search });
+    res.json({ coupons: coupons });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Internal Server Error");
+  }
+};
+
+const AdminAddCoupons = async (req, res) => {
+  try {
+    const coupon = req.body;
+    await new DiscountModel(coupon).create();
+    res.status(200).json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Internal Server Error");
+  }
+};
+
+const AdminEditCoupons = async (req, res) => {
+  try {
+    const coupon = req.body;
+    await new DiscountModel(coupon).update();
+    res.status(200).json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Internal Server Error");
+  }
+};
+
+const AdminDeleteCoupons = async (req, res) => {
+  try {
+    const ids = req.body.ids;
+    await DiscountModel.delete(ids);
+    res.status(200).json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Internal Server Error");
+  }
+};
+
 module.exports = {
   AdminLogin,
+  AdminCoupons,
+  AdminAddCoupons,
+  AdminEditCoupons,
+  AdminDeleteCoupons,
   AdminDashboard,
   AdminProducts,
   AdminEditProduct,

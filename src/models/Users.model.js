@@ -24,7 +24,6 @@ module.exports = class Users {
   }
 
   async byId() {
-    console.log(this.user.id);
     const user_id = await new Promise((resolve, reject) => {
       db.get(
         "SELECT id FROM `Users` WHERE id = ?",

@@ -56,11 +56,6 @@ const AddOrder = async (req, res) => {
 
     await new Users({
       id: userData.id,
-      coins: total,
-    }).addCoins();
-
-    await new Users({
-      id: userData.id,
       coins_spent: totalCoinsSpent,
     }).removeCoins();
 

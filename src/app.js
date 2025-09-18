@@ -32,6 +32,7 @@ app.use("/talgtna/api/order", require("./routes/Orders.route"));
 app.use("/talgtna/api/user", require("./routes/Users.route"));
 app.use("/talgtna/api/admin", require("./routes/Admins.route"));
 app.use("/talgtna/api/discount", require("./routes/Discount.route"));
+app.use("/talgtna/api/promoters", require("./routes/Promoter.route"));
 
 app.get("*", (req, res, next) => {
   if (req.path.includes("api")) {
