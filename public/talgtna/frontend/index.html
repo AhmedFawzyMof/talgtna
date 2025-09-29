@@ -41,12 +41,12 @@
     <script
       type="module"
       crossorigin
-      src="/talgtna/assets/index-DwK-SX_z.js"
+      src="/talgtna/assets/index-oQeQ2nqw.js"
     ></script>
     <link
       rel="stylesheet"
       crossorigin
-      href="/talgtna/assets/index-7-fPuXja.css"
+      href="/talgtna/assets/index-Dy5w4TGy.css"
     />
     <script type="module">
       import.meta.url;
@@ -75,11 +75,8 @@
           document.body.appendChild(n);
       })();
     </script>
-
-    <!-- REMOVED:
-      <link rel="manifest" href="/manifest.webmanifest" />
-      <script id="vite-plugin-pwa:register-sw" src="/registerSW.js"></script>
-    -->
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <script id="vite-plugin-pwa:register-sw" src="/registerSW.js"></script>
   </head>
   <body dir="rtl">
     <div id="root"></div>
@@ -115,34 +112,11 @@
       nomodule
       crossorigin
       id="vite-legacy-entry"
-      data-src="/talgtna/assets/index-legacy-Dng01Mwd.js"
+      data-src="/talgtna/assets/index-legacy-DC3B8lZT.js"
     >
       System.import(
         document.getElementById("vite-legacy-entry").getAttribute("data-src")
       );
-    </script>
-
-    <!-- Cleanup: Unregister old service workers -->
-    <script>
-      if ("serviceWorker" in navigator) {
-        navigator.serviceWorker.getRegistrations().then((registrations) => {
-          for (let registration of registrations) {
-            registration.unregister().then((success) => {
-              if (success) {
-                console.log("Service worker unregistered:", registration);
-              }
-            });
-          }
-        });
-        // Clear old caches as well
-        if (window.caches) {
-          caches.keys().then((names) => {
-            for (let name of names) {
-              caches.delete(name);
-            }
-          });
-        }
-      }
     </script>
   </body>
 </html>
