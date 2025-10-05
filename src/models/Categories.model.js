@@ -8,7 +8,7 @@ module.exports = class Categories {
   static async getAll({ search }) {
     return new Promise((resolve, reject) => {
       let sql =
-        "SELECT Categories.id, Categories.name, Categories.image, (SELECT COUNT(*) FROM Products WHERE Products.category = Categories.name) as number_of_products FROM `Categories`";
+        "SELECT Categories.id, Categories.name, Categories.image, Categories.new, (SELECT COUNT(*) FROM Products WHERE Products.category = Categories.name AND Products.available = 0) as number_of_products FROM `Categories`";
       const inputs = [];
 
       if (search !== undefined && search !== "") {

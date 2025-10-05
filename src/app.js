@@ -8,11 +8,7 @@ const port = process.env.PORT || 3000;
 require("dotenv").config();
 
 const corsOptions = {
-  origin: [
-    "http://localhost:5173",
-    "http://localhost:5174",
-    "https://talgtna.techno-pro.site",
-  ],
+  origin: ["*"],
   optionsSuccessStatus: 200,
   credentials: true,
 };
@@ -21,7 +17,15 @@ app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 app.use(express.json({ limit: "50mb" }));
 app.set("view engine", "ejs");
 app.use(cookieParser());
-app.use(express.static("public"));
+app.use(
+  express.static("public", {
+    setHeaders: (res, path) => {
+      if (path.includes("sw")) {
+        res.setHeader("Cache-Control", "no-cache");
+      }
+    },
+  })
+);
 app.use(cors(corsOptions));
 
 app.use("/talgtna/api", require("./routes/Index.route"));
