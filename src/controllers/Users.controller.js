@@ -169,8 +169,6 @@ const CreateUser = async (req, res) => {
         city: body.city,
       }).update();
 
-      console.log(user);
-
       res.json({
         success: true,
         token: jwt.sign({ id: UserId.UserId(token) }, process.env.SECRET_KEY),
@@ -188,7 +186,6 @@ const CreateUser = async (req, res) => {
       floor: body.floor,
       city: body.city,
     }).add();
-    console.log(user);
 
     res.json({
       success: true,

@@ -36,7 +36,6 @@ module.exports = class Users {
     });
 
     const user_favorites = await new Promise((resolve, reject) => {
-      console.log(user_id);
       db.get(
         "SELECT COUNT(product) as favorites FROM favourite WHERE user = ?",
         [user_id.id],

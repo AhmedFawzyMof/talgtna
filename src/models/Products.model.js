@@ -294,7 +294,6 @@ module.exports = class Products {
       });
     });
 
-    console.log(OFFSET, search);
     const products = await new Promise((resolve, reject) => {
       let sql = "SELECT * FROM `Products` WHERE deleted = 0";
       const inputs = [];
