@@ -4,6 +4,7 @@ const OrderModel = require("../models/Orders.model");
 const OrderProductsModel = require("../models/OrderProducts.model");
 const ProductModel = require("../models/Products.model");
 const CategoryModel = require("../models/Categories.model");
+const SubCategoryModel = require("../models/SubCategory.model");
 const CompanyModel = require("../models/Companies.model");
 const ContactModel = require("../models/Contacts.model");
 const OfferModel = require("../models/Offers.model");
@@ -81,7 +82,6 @@ const AdminProducts = async (req, res) => {
 const AdminEditProduct = async (req, res) => {
   try {
     const product = req.body;
-
     if (req.file) {
       const image = `/img/product/${product.id}${path.extname(
         req.file.originalname
@@ -266,6 +266,45 @@ const AdminAddCategories = async (req, res) => {
   try {
     const category = req.body;
     await new CategoryModel(category).add();
+    res.status(200).json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Internal Server Error");
+  }
+};
+
+const AdminSubCategories = async (req, res) => {
+  try {
+    const search = req.query.search;
+    const subCategories = await SubCategoryModel.getAll({ search });
+    res.json({ subCategories: subCategories });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Internal Server Error");
+  }
+};
+
+const AdminAddSubCategories = async (req, res) => {
+  try {
+    const sub_category = req.body;
+
+    const ext = path.extname(req.file.originalname);
+    const image = `/img/sub_category/${sub_category.name}${ext}`;
+
+    Object.assign(sub_category, { image });
+
+    await new SubCategoryModel(sub_category).add();
+    res.status(200).json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Internal Server Error");
+  }
+};
+
+const AdminDeleteSubCategories = async (req, res) => {
+  try {
+    const ids = req.body.ids;
+    await SubCategoryModel.delete({ ids });
     res.status(200).json({ success: true });
   } catch (err) {
     console.error(err);
@@ -541,4 +580,7 @@ module.exports = {
   AdminAddDelivery,
   AdminDeleteDelivery,
   AdminEditHideCity,
+  AdminSubCategories,
+  AdminDeleteSubCategories,
+  AdminAddSubCategories,
 };

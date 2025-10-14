@@ -22,9 +22,9 @@ if (!self.define) {
       location.href;
     if (s[t]) return;
     let o = {};
-    const c = (e) => i(e, t),
-      l = { module: { uri: t }, exports: o, require: c };
-    s[t] = Promise.all(n.map((e) => l[e] || c(e))).then((e) => (r(...e), o));
+    const f = (e) => i(e, t),
+      l = { module: { uri: t }, exports: o, require: f };
+    s[t] = Promise.all(n.map((e) => l[e] || f(e))).then((e) => (r(...e), o));
   };
 }
 define(["./workbox-5ffe50d4"], function (e) {
@@ -33,11 +33,11 @@ define(["./workbox-5ffe50d4"], function (e) {
     e.clientsClaim(),
     e.precacheAndRoute(
       [
-        { url: "talgtna/assets/index-bsSGwTc-.js", revision: null },
-        { url: "talgtna/assets/index-Uc356y9o.css", revision: null },
+        { url: "talgtna/assets/index-BmlAQuv5.js", revision: null },
+        { url: "talgtna/assets/index-WqOB3CH3.css", revision: null },
         {
           url: "talgtna/frontend/index.html",
-          revision: "26cf48e33921fc1ace12df4ba245fb5e",
+          revision: "e2efe4f8fd9d7fae8f6769218527b5f4",
         },
         { url: "registerSW.js", revision: "cee46e7419a52c7c172b57eea3d50c1f" },
         {

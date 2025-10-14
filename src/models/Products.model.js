@@ -147,7 +147,7 @@ module.exports = class Products {
   async add() {
     return new Promise((resolve, reject) => {
       db.run(
-        "INSERT INTO `Products`(`name`, `description`, `category`, `company`, `price`, `image`, `available`) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO `Products`(`name`, `description`, `category`, `company`, `price`, `image`, `available`, `sub_category`) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
         [
           this.product.name,
           this.product.description,
@@ -156,6 +156,7 @@ module.exports = class Products {
           this.product.price,
           this.product.image,
           this.product.available,
+          this.product.sub_category,
         ],
         function (err) {
           if (err) reject(err);

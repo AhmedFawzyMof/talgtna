@@ -17,6 +17,10 @@ const storage = multer.diskStorage({
       dir = "./public/talgtna/img/offer";
     }
 
+    if (req.url.includes("sub_categories")) {
+      dir = "./public/talgtna/img/sub_category";
+    }
+
     cb(null, dir);
   },
   filename: function (req, file, cb) {
@@ -30,6 +34,9 @@ const storage = multer.diskStorage({
     }
     if (req.url.includes("offers")) {
       name = req.body.company;
+    }
+    if (req.url.includes("sub_categories")) {
+      name = req.body.name;
     }
     cb(null, `${name}${ext}`);
   },
@@ -80,6 +87,19 @@ router.post(
   "/categories/delete",
   ValidateToken,
   controller.AdminDeleteCategories
+);
+
+router.get("/sub_categories", ValidateToken, controller.AdminSubCategories);
+router.post(
+  "/sub_categories",
+  ValidateToken,
+  upload.single("image"),
+  controller.AdminAddSubCategories
+);
+router.post(
+  "/sub_categories/delete",
+  ValidateToken,
+  controller.AdminDeleteSubCategories
 );
 
 router.get("/contacts", ValidateToken, controller.AdminContacts);
